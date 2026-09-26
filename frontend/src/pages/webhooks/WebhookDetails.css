@@ -1,0 +1,101 @@
+/* src/pages/webhooks/WebhookDetails.css */
+
+.webhook-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 42rem;
+}
+
+.webhook-details__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.webhook-details__header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
+.webhook-details__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.webhook-details__card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+}
+
+.webhook-details__card h2 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted-foreground);
+    margin: 0 0 0.75rem;
+}
+
+.webhook-details__url-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.webhook-details__url {
+    flex: 1;
+    font-family: monospace;
+    font-size: 0.8125rem;
+    background: var(--muted);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.webhook-details__events {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.webhook-details__hint {
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    margin: 0 0 0.75rem;
+}
+
+.webhook-details__hint code {
+    font-size: 0.75rem;
+    background: var(--muted);
+    padding: 0.0625rem 0.3rem;
+    border-radius: 0.25rem;
+}
+
+.webhook-details__meta {
+    display: flex;
+    gap: 2rem;
+}
+
+.webhook-details__meta p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.webhook-details__error {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--destructive);
+    border-radius: var(--radius);
+    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    color: var(--destructive);
+}

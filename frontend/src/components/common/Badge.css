@@ -1,0 +1,43 @@
+/* src/components/common/Badge.css */
+
+/* NOTE: variables.css has no --success or --warning tokens yet. The
+   var(--success, <fallback>) syntax below falls back to a hardcoded oklch
+   green/amber only until the team adds real tokens — once --success and
+   --warning exist in variables.css, these pick them up automatically with
+   no change needed here. Worth raising with the team. */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.badge--neutral {
+    background: var(--muted);
+    color: var(--muted-foreground);
+}
+
+.badge--primary {
+    background: color-mix(in oklab, var(--primary) 15%, transparent);
+    color: var(--primary);
+}
+
+.badge--success {
+    background: color-mix(in oklab, var(--success, oklch(0.6 0.15 145)) 15%, transparent);
+    color: var(--success, oklch(0.5 0.15 145));
+}
+
+.badge--warning {
+    background: color-mix(in oklab, var(--warning, oklch(0.75 0.15 80)) 20%, transparent);
+    color: var(--warning, oklch(0.5 0.15 80));
+}
+
+.badge--destructive {
+    background: color-mix(in oklab, var(--destructive) 15%, transparent);
+    color: var(--destructive);
+}

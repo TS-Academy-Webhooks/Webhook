@@ -1,0 +1,45 @@
+/* src/components/webhooks/WebhookForm.css */
+
+.webhook-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 32rem;
+}
+
+.webhook-form__error {
+    font-size: 0.875rem;
+    color: var(--destructive);
+    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    border: 1px solid var(--destructive);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin: 0;
+}
+
+.webhook-form__url-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.webhook-form__demo-link {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.webhook-form__demo-link:hover {
+    text-decoration: underline;
+}
+
+.webhook-form__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
