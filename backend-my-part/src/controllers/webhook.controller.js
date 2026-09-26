@@ -10,8 +10,7 @@ const { processDelivery } = require("../services/retry.service");
 
 // A simple, lightweight URL check: must be a valid URL and use https://.
 // (In development, http://localhost is allowed for local testing.)
-// This is intentionally basic for the scope of this project — it does not
-// check for private/internal IP addresses.
+// This is intentionally basic for the scope of this project. it does not check for private/internal IP addresses.
 function isAcceptableUrl(url) {
   try {
     const parsed = new URL(url);
@@ -130,10 +129,15 @@ exports.getWebhook = catchAsync(async (req, res, next) => {
   );
   if (!webhook) return next(new AppError("Webhook not found", 404));
 
+  // The secret is only ever shown in full at the moment it's created or regenerated (see createWebhook and updateWebhook). Every other time it's viewed, it's masked, this is the same pattern GitHub uses for
+  // personal access tokens: you can regenerate if you lose it, but you can never just look it up again casually.
+  const obj = webhook.toJSON();
+  obj.secret = maskSecret(webhook._doc.secret);
+
   res.status(200).json({
     success: true,
     message: "Webhook retrieved successfully",
-    data: webhook,
+    data: obj,
   });
 });
 
@@ -157,14 +161,21 @@ exports.updateWebhook = catchAsync(async (req, res, next) => {
   if (name !== undefined) webhook.name = name.trim();
   if (events !== undefined) webhook.events = events;
   if (isActive !== undefined) webhook.isActive = Boolean(isActive);
-  if (regenerateSecret) webhook.secret = generateSecret();
+
+  const didRegenerateSecret = Boolean(regenerateSecret);
+  if (didRegenerateSecret) webhook.secret = generateSecret();
 
   await webhook.save();
+
+  // Only show the full secret when this request just generated a NEW one
+  // (the user needs to copy it right now). Otherwise, mask it — same rule as every other GET/view of a webhook.
+  const obj = webhook.toJSON();
+  obj.secret = didRegenerateSecret ? webhook._doc.secret : maskSecret(webhook._doc.secret);
 
   res.status(200).json({
     success: true,
     message: "Webhook updated successfully",
-    data: webhook,
+    data: obj,
   });
 });
 
@@ -220,8 +231,7 @@ exports.getWebhookDeliveries = catchAsync(async (req, res, next) => {
 
 // POST /api/webhooks/:id/test
 // This targets ONE specific webhook directly, regardless of which events
-// it's subscribed to — so it bypasses the normal "find matching webhooks"
-// path used for real shipment events.
+// it's subscribed to, so it bypasses the normal "find matching webhooks" path used for real shipment events.
 exports.testWebhook = catchAsync(async (req, res, next) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return next(new AppError("Invalid webhook ID", 400));
