@@ -21,9 +21,11 @@ export function SecretField({ value, oneTime = false }) {
             )}
             <div className="secret-field__row">
                 <code className="secret-field__value">{value}</code>
-                <Button variant="secondary" onClick={() => copy(value)}>
-                    {copied ? 'Copied!' : 'Copy'}
-                </Button>
+                {oneTime && (
+                    <Button variant="secondary" onClick={() => copy(value)}>
+                        {copied ? 'Copied!' : 'Copy'}
+                    </Button>
+                )}
             </div>
         </div>
     );

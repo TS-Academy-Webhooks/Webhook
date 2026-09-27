@@ -1,5 +1,6 @@
 // src/layouts/DashboardLayout.jsx
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import './DashboardLayout.css';
 
 // Intentionally minimal: this is NOT the final Navbar/Sidebar (that's the
@@ -13,6 +14,14 @@ const NAV_LINKS = [
 ];
 
 export default function DashboardLayout() {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login', { replace: true });
+    };
+
     return (
         <div className="dashboard-layout">
             <header className="dashboard-layout__topbar">
@@ -29,6 +38,9 @@ export default function DashboardLayout() {
                             {link.label}
                         </NavLink>
                     ))}
+                    <button type="button" className="dashboard-layout__logout" onClick={handleLogout}>
+                        Log out
+                    </button>
                 </nav>
             </header>
             <main className="dashboard-layout__content">

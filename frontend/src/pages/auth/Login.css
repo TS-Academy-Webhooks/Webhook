@@ -1,0 +1,77 @@
+/* src/pages/auth/Login.css */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background);
+    padding: 1rem;
+}
+
+.login-page__card {
+    width: 100%;
+    max-width: 24rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.login-page__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.login-page__error {
+    font-size: 0.875rem;
+    color: var(--destructive);
+    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    border: 1px solid var(--destructive);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin: 0;
+}
+
+.login-page__success {
+    font-size: 0.875rem;
+    color: var(--success, var(--primary));
+    background: color-mix(in oklab, var(--success, var(--primary)) 10%, transparent);
+    border: 1px solid var(--success, var(--primary));
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin: 0;
+}
+
+.login-page__signup-link {
+    font-size: 0.8125rem;
+    color: var(--primary);
+    text-decoration: none;
+    align-self: flex-start;
+}
+
+.login-page__signup-link:hover {
+    text-decoration: underline;
+}
+
+.login-page__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.login-page__forgot-link {
+    font-size: 0.8125rem;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.login-page__forgot-link:hover {
+    text-decoration: underline;
+}

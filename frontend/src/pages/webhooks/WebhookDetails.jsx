@@ -1,5 +1,5 @@
 // src/pages/webhooks/WebhookDetails.jsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useWebhook } from '../../hooks/useWebhook';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
@@ -24,9 +24,21 @@ export default function WebhookDetails() {
     const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     // Present only right after creation (Create Webhook navigates here with
-    // this in router state). It never survives a page refresh, which is the
-    // point — the full secret shouldn't linger anywhere client-side.
-    const newSecret = location.state?.newSecret;
+    // this in router state). Captured once, on the very first render, so it
+    // survives this component's own re-renders without re-reading history.
+    const [newSecret] = useState(() => location.state?.newSecret);
+
+    // Browsers persist `history.state` across a page reload, so leaving the
+    // secret in router state would let it — and the Copy button that exposes
+    // it — keep resurfacing on every refresh of this URL. Scrub it from
+    // history immediately after capturing it above, so a reload can never
+    // see it again; only the masked `webhook.secret` remains reachable.
+    useEffect(() => {
+        if (location.state?.newSecret) {
+            navigate(location.pathname, { replace: true, state: null });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     if (loading) return <Loader />;
 

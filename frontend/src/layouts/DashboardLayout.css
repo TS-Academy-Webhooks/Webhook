@@ -43,6 +43,19 @@
     border-bottom-color: var(--primary);
 }
 
+.dashboard-layout__logout {
+    background: none;
+    border: none;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    padding: 0;
+}
+
+.dashboard-layout__logout:hover {
+    color: var(--destructive);
+}
+
 .dashboard-layout__content {
     padding: 1.5rem;
     max-width: 72rem;

@@ -34,9 +34,11 @@ api.interceptors.response.use(
             localStorage.removeItem(AUTH_TOKEN_KEY);
             // Avoid an import cycle with react-router here; a hard redirect is
             // fine for a 401 since app state is invalid anyway.
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
+            // TODO: once the login page exists, uncomment this redirect. For now, just log the 401 so we can see it in the console.
+            console.warn('Unauthorized (401) response received. Redirecting to login.');
+            // if (window.location.pathname !== '/login') {
+            //     window.location.href = '/login';
+            // }
         }
         return Promise.reject(error);
     }
