@@ -1,31 +1,45 @@
-import { useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
-const mockDeliveries = [
-  {
-    id: "del_001",
+const mockHistory = {
+  webhook_001: {
     webhookName: "Order Confirmation",
-    eventType: "order.created",
-    status: "success",
-    attempts: 1,
-    timestamp: "2026-09-27 14:32",
+    deliveries: [
+      {
+        id: "del_001",
+        eventType: "order.created",
+        status: "success",
+        attempts: 1,
+        timestamp: "2026-09-27 14:32",
+      },
+      {
+        id: "del_004",
+        eventType: "order.created",
+        status: "success",
+        attempts: 1,
+        timestamp: "2026-09-26 09:15",
+      },
+      {
+        id: "del_005",
+        eventType: "order.updated",
+        status: "failed",
+        attempts: 2,
+        timestamp: "2026-09-25 18:47",
+      },
+    ],
   },
-  {
-    id: "del_002",
+  webhook_002: {
     webhookName: "Shipment Update",
-    eventType: "shipment.dispatched",
-    status: "failed",
-    attempts: 3,
-    timestamp: "2026-09-27 13:10",
+    deliveries: [
+      {
+        id: "del_002",
+        eventType: "shipment.dispatched",
+        status: "failed",
+        attempts: 3,
+        timestamp: "2026-09-27 13:10",
+      },
+    ],
   },
-  {
-    id: "del_003",
-    webhookName: "Payment Received",
-    eventType: "payment.success",
-    status: "pending",
-    attempts: 0,
-    timestamp: "2026-09-27 12:45",
-  },
-];
+};
 
 function statusStyles(status) {
   switch (status) {
@@ -40,18 +54,38 @@ function statusStyles(status) {
   }
 }
 
-function Deliveries() {
-  const navigate = useNavigate();
+function DeliveryHistory() {
+  const { webhookId } = useParams();
+  const webhook = mockHistory[webhookId];
+
+  if (!webhook) {
+    return (
+      <div className="p-6 bg-background text-foreground min-h-screen">
+        <p>No history found for this webhook.</p>
+        <Link to="/deliveries" className="text-primary underline">
+          Back to Deliveries
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-background text-foreground min-h-screen">
-      <h1 className="text-2xl font-semibold mb-6">Deliveries</h1>
+      <Link
+        to="/deliveries"
+        className="text-sm text-muted-foreground hover:text-foreground"
+      >
+        ← Back to Deliveries
+      </Link>
+
+      <h1 className="text-2xl font-semibold mt-4 mb-6">
+        Delivery History — {webhook.webhookName}
+      </h1>
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/50 text-muted-foreground">
             <tr>
-              <th className="px-4 py-3 font-medium">Webhook</th>
               <th className="px-4 py-3 font-medium">Event Type</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Attempts</th>
@@ -59,16 +93,12 @@ function Deliveries() {
             </tr>
           </thead>
           <tbody>
-            {mockDeliveries.map((delivery) => (
+            {webhook.deliveries.map((delivery) => (
               <tr
                 key={delivery.id}
-                onClick={() => navigate(`/deliveries/${delivery.id}`)}
-                className="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
+                className="border-t border-border hover:bg-muted/30 transition-colors"
               >
-                <td className="px-4 py-3">{delivery.webhookName}</td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {delivery.eventType}
-                </td>
+                <td className="px-4 py-3">{delivery.eventType}</td>
                 <td className="px-4 py-3">
                   <span
                     className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles(
@@ -91,4 +121,4 @@ function Deliveries() {
   );
 }
 
-export default Deliveries;
+export default DeliveryHistory;
