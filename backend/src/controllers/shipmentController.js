@@ -6,9 +6,11 @@ const {
   changeShipmentStatus,
   createShipment,
 } = require("../services/shipmentService");
+const { createShipmentEvent } = require("../services/eventService");
 
 exports.createShipment = async (req, res) => {
   const shipment = await createShipment(req.body);
+  await createShipmentEvent(shipment);
   return sendSuccess(res, "Shipment created successfully", shipment, 201);
 };
 
@@ -95,6 +97,7 @@ exports.getShipment = async (req, res) => {
 
 exports.updateShipmentStatus = async (req, res) => {
   const shipment = await changeShipmentStatus(req.params.id, req.body.status);
+  await createShipmentEvent(shipment);
   return sendSuccess(res, "Shipment status updated successfully", shipment);
 };
 
