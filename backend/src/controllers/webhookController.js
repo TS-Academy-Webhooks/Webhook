@@ -1,59 +1,72 @@
 const crypto = require("crypto");
 const Webhook = require("../models/webhook");
 const DeliveryAttempt = require("../models/DeliveryAttempt");
+const AppError = require("../utils/AppError");
+const { sendSuccess } = require("../utils/apiResponse");
+const validateWebhookUrl = require("../utils/validateWebhookUrl");
 
-// Create a new webhook
 exports.createWebhook = async (req, res) => {
-  try {
-    const { name, url, events } = req.body;
+  const url = await validateWebhookUrl(req.body.url);
+  const secret = `whsec_${crypto.randomBytes(16).toString("hex")}`;
+  const webhook = await Webhook.create({
+    name: req.body.name,
+    url,
+    events: req.body.events,
+    secret,
+  });
 
-    if (!name || !url || !events || events.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide name, url, and at least one event",
-        data: null,
-      });
-    }
-
-    const secret = crypto.randomBytes(32).toString("hex");
-
-    const webhook = await Webhook.create({
-      name,
-      url,
-      events,
-      secret,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Webhook created successfully",
-      data: webhook,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong creating the webhook",
-      data: null,
-    });
-  }
+  return sendSuccess(res, "Webhook created successfully", {
+    ...webhook.toObject(),
+    secret,
+  }, 201);
 };
 
-// Get all webhooks
 exports.getWebhooks = async (req, res) => {
-  try {
-    const webhooks = await Webhook.find().sort({ createdAt: -1 });
-    res.json({
-      success: true,
-      message: "Webhooks retrieved successfully",
-      data: webhooks,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong retrieving webhooks",
-      data: null,
-    });
+  const webhooks = await Webhook.find().sort({ createdAt: -1 });
+  return sendSuccess(res, "Webhooks retrieved successfully", webhooks);
+};
+
+exports.getWebhook = async (req, res) => {
+  const webhook = await Webhook.findById(req.params.id);
+  if (!webhook) {
+    throw new AppError("Webhook not found", 404);
   }
+
+  return sendSuccess(res, "Webhook retrieved successfully", webhook);
+};
+
+exports.updateWebhook = async (req, res) => {
+  const updates = {};
+  for (const field of ["name", "events", "active"]) {
+    if (req.body[field] !== undefined) {
+      updates[field] = req.body[field];
+    }
+  }
+  if (req.body.url !== undefined) {
+    updates.url = await validateWebhookUrl(req.body.url);
+  }
+  if (!Object.keys(updates).length) {
+    throw new AppError("Provide at least one supported field to update", 400);
+  }
+
+  const webhook = await Webhook.findByIdAndUpdate(req.params.id, updates, {
+    new: true,
+    runValidators: true,
+  });
+  if (!webhook) {
+    throw new AppError("Webhook not found", 404);
+  }
+
+  return sendSuccess(res, "Webhook updated successfully", webhook);
+};
+
+exports.deleteWebhook = async (req, res) => {
+  const webhook = await Webhook.findByIdAndDelete(req.params.id);
+  if (!webhook) {
+    throw new AppError("Webhook not found", 404);
+  }
+
+  return sendSuccess(res, "Webhook deleted successfully", { id: webhook._id });
 };
 
 // Get delivery logs for a specific webhook
