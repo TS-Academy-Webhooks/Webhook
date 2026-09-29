@@ -1,12 +1,20 @@
-const express = require("express");
-const app = express();
+require("dotenv").config();
 
-app.use(express.json());
+const app = require("./src/app");
+const connectDB = require("./src/config/db");
 
-app.get("/", (req, res) => {
-  res.send("SwiftDrop server is running 🚀");
-});
+const PORT = process.env.PORT || 3000;
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-});
+async function startServer() {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+}
+
+startServer();
