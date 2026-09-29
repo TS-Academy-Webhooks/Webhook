@@ -1,5 +1,4 @@
 const Shipment = require("../models/Shipment");
-const Event = require("../models/event");
 const AppError = require("../utils/AppError");
 const { sendSuccess } = require("../utils/apiResponse");
 const {
@@ -51,41 +50,6 @@ exports.getShipments = async (req, res) => {
   });
 };
 
-// Track a shipment publicly by tracking number
-exports.trackShipment = async (req, res) => {
-  try {
-    const { trackingNumber } = req.params;
-
-    const shipment = await Shipment.findOne({ trackingNumber });
-
-    if (!shipment) {
-      return res.status(404).json({
-        success: false,
-        message: "Shipment not found",
-        data: null,
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Shipment found",
-      data: {
-        trackingNumber: shipment.trackingNumber,
-        status: shipment.status,
-        origin: shipment.origin,
-        destination: shipment.destination,
-        lastUpdate: shipment.updatedAt,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong retrieving the shipment",
-      data: null,
-    });
-  }
-};
-
 exports.getShipment = async (req, res) => {
   const shipment = await Shipment.findById(req.params.id);
   if (!shipment) {
@@ -99,22 +63,4 @@ exports.updateShipmentStatus = async (req, res) => {
   const shipment = await changeShipmentStatus(req.params.id, req.body.status);
   await createShipmentEvent(shipment);
   return sendSuccess(res, "Shipment status updated successfully", shipment);
-};
-
-// Get all events
-exports.getEvents = async (req, res) => {
-  try {
-    const events = await Event.find().sort({ createdAt: -1 });
-    res.json({
-      success: true,
-      message: "Events retrieved successfully",
-      data: events,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong retrieving events",
-      data: null,
-    });
-  }
 };
