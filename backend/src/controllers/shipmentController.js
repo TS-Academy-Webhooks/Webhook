@@ -1,4 +1,5 @@
 const Shipment = require("../models/Shipment");
+const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const { sendSuccess } = require("../utils/apiResponse");
 const {
@@ -8,7 +9,20 @@ const {
 const { createShipmentEvent } = require("../services/eventService");
 
 exports.createShipment = async (req, res) => {
-  const shipment = await createShipment(req.body);
+  const shipmentData = {
+    origin: req.body.origin,
+    destination: req.body.destination,
+    amount: req.body.amount,
+  };
+  if (req.user.role === "customer") {
+    shipmentData.customer = req.user.name;
+    shipmentData.customerId = req.user._id;
+  } else {
+    shipmentData.customer = req.body.customer;
+    shipmentData.customerId = req.body.customerId;
+  }
+
+  const shipment = await createShipment(shipmentData);
   await createShipmentEvent(shipment);
   return sendSuccess(res, "Shipment created successfully", shipment, 201);
 };
@@ -16,7 +30,7 @@ exports.createShipment = async (req, res) => {
 exports.getShipments = async (req, res) => {
   const page = Number(req.query.page || 1);
   const limit = Number(req.query.limit || 20);
-  const filter = {};
+  const filter = req.user.role === "admin" ? {} : { customerId: req.user._id };
 
   if (req.query.status) {
     filter.status = req.query.status;
@@ -51,12 +65,33 @@ exports.getShipments = async (req, res) => {
 };
 
 exports.getShipment = async (req, res) => {
-  const shipment = await Shipment.findById(req.params.id);
+  const shipmentFilter = req.user.role === "admin"
+    ? { _id: req.params.id }
+    : { _id: req.params.id, customerId: req.user._id };
+  const shipment = await Shipment.findOne(shipmentFilter);
   if (!shipment) {
     throw new AppError("Shipment not found", 404);
   }
 
   return sendSuccess(res, "Shipment retrieved successfully", shipment);
+};
+
+exports.assignShipmentCustomer = async (req, res) => {
+  const customer = await User.findOne({ _id: req.body.customerId, role: "customer" });
+  if (!customer) {
+    throw new AppError("Customer account not found", 404);
+  }
+
+  const shipment = await Shipment.findByIdAndUpdate(
+    req.params.id,
+    { customerId: customer._id, customer: customer.name },
+    { returnDocument: "after", runValidators: true }
+  );
+  if (!shipment) {
+    throw new AppError("Shipment not found", 404);
+  }
+
+  return sendSuccess(res, "Shipment assigned to customer successfully", shipment);
 };
 
 exports.updateShipmentStatus = async (req, res) => {

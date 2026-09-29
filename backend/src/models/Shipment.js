@@ -39,6 +39,11 @@ const shipmentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
     origin: {
       type: String,
       required: true,
