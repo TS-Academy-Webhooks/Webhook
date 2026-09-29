@@ -1,6 +1,6 @@
 const { randomInt } = require("crypto");
 const Event = require("../models/event");
-const Webhook = require("../models/webhook");
+const deliverEvent = require("./webhookDelivery");
 
 async function createShipmentEvent(shipment) {
   const type = `shipment.${shipment.status}`;
@@ -20,11 +20,11 @@ async function createShipmentEvent(shipment) {
     shipmentId: shipment._id,
     payload,
   });
-  const webhooks = await Webhook.find({ events: type, active: true }).select("name");
 
-  for (const webhook of webhooks) {
-    console.log(`Webhook "${webhook.name}" would receive ${event.type} (${event.eventId})`);
-  }
+  // Delivery runs separately so a slow receiver cannot delay the shipment response.
+  void deliverEvent(event._id).catch((error) => {
+    console.error("Background webhook delivery failed:", error.message);
+  });
 
   return event;
 }
