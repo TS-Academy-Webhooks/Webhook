@@ -8,12 +8,14 @@ const deliveryAttemptSchema = new mongoose.Schema(
       required: true,
     },
     eventId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
       required: true,
     },
     attemptNumber: {
       type: Number,
       default: 1,
+      min: 1,
     },
     status: {
       type: String,
@@ -25,12 +27,20 @@ const deliveryAttemptSchema = new mongoose.Schema(
     },
     response: {
       type: String,
+      maxlength: 1000,
     },
     duration: {
       type: Number,
+      min: 0,
+    },
+    attemptedAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }
 );
+
+deliveryAttemptSchema.index({ webhookId: 1, eventId: 1 });
 
 module.exports = mongoose.model("DeliveryAttempt", deliveryAttemptSchema);

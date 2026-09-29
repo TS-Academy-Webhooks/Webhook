@@ -1,5 +1,16 @@
 const mongoose = require("mongoose");
 
+const webhookEventTypes = [
+  "shipment.created",
+  "shipment.picked_up",
+  "shipment.in_transit",
+  "shipment.arrived_at_hub",
+  "shipment.out_for_delivery",
+  "shipment.delivered",
+  "shipment.delivery_failed",
+  "shipment.cancelled",
+];
+
 const webhookSchema = new mongoose.Schema(
   {
     name: {
@@ -11,21 +22,22 @@ const webhookSchema = new mongoose.Schema(
       required: true,
     },
     events: {
-      type: [String],
+      type: [{ type: String, enum: webhookEventTypes }],
       required: true,
+      validate: {
+        validator: (events) => events.length > 0,
+        message: "At least one event subscription is required",
+      },
     },
     secret: {
       type: String,
       required: true,
+      // Queries must opt in before retrieving a signing secret.
+      select: false,
     },
     active: {
       type: Boolean,
       default: true,
-    },
-    ownerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
     },
   },
   { timestamps: true }

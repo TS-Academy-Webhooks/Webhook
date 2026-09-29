@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const Webhook = require("../models/Webhook");
+const Webhook = require("../models/webhook");
 const DeliveryAttempt = require("../models/DeliveryAttempt");
 
 // Create a new webhook
@@ -22,7 +22,6 @@ exports.createWebhook = async (req, res) => {
       url,
       events,
       secret,
-      ownerId: "000000000000000000000000",
     });
 
     res.status(201).json({

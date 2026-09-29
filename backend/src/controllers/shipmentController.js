@@ -1,5 +1,5 @@
 const Shipment = require("../models/Shipment");
-const Event = require("../models/Event");
+const Event = require("../models/event");
 const deliverEvent = require("../services/webhookDelivery");
 
 // Generate a random tracking number like TRK-48213

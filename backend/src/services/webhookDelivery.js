@@ -1,13 +1,19 @@
 const crypto = require("crypto");
-const Webhook = require("../models/Webhook");
+const Event = require("../models/event");
+const Webhook = require("../models/webhook");
 const DeliveryAttempt = require("../models/DeliveryAttempt");
 
 async function deliverEvent(eventType, payload) {
   try {
+    const event = await Event.findOne({ eventId: payload.eventId });
+    if (!event) {
+      throw new Error(`Event ${payload.eventId} was not found`);
+    }
+
     const webhooks = await Webhook.find({
       events: eventType,
       active: true,
-    });
+    }).select("+secret");
 
     for (const webhook of webhooks) {
       const body = JSON.stringify(payload);
@@ -33,7 +39,8 @@ async function deliverEvent(eventType, payload) {
 
         await DeliveryAttempt.create({
           webhookId: webhook._id,
-          eventId: payload.eventId,
+          // Delivery attempts link to the stored event document, not its public ID.
+          eventId: event._id,
           status: response.ok ? "success" : "failed",
           httpStatus: response.status,
           response: response.statusText,
@@ -48,7 +55,7 @@ async function deliverEvent(eventType, payload) {
 
         await DeliveryAttempt.create({
           webhookId: webhook._id,
-          eventId: payload.eventId,
+          eventId: event._id,
           status: "failed",
           response: err.message,
           duration,
