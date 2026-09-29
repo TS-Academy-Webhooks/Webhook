@@ -4,6 +4,8 @@ const trackingRoutes = require("./routes/trackingRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
 const demoReceiverRoutes = require("./routes/demoReceiverRoutes");
+const deliveryRoutes = require("./routes/deliveryRoutes");
+const authenticate = require("./middleware/auth");
 const { sendSuccess } = require("./utils/apiResponse");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
@@ -28,6 +30,7 @@ app.use("/api/shipments", shipmentRoutes);
 app.use("/api/tracking", trackingRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/webhooks", webhookRoutes);
+app.use("/api/deliveries", authenticate, deliveryRoutes);
 app.use("/api/demo-receiver", demoReceiverRoutes);
 
 app.use(notFound);

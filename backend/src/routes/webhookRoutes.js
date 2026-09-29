@@ -1,5 +1,5 @@
 const express = require("express");
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 const router = express.Router();
 const validateRequest = require("../middleware/validateRequest");
 const eventTypes = require("../utils/eventTypes");
@@ -24,7 +24,15 @@ router.post(
   createWebhook
 );
 router.get("/", getWebhooks);
-router.get("/:id/deliveries", webhookId, validateRequest, getWebhookDeliveries);
+router.get(
+  "/:id/deliveries",
+  webhookId,
+  query("page").optional().isInt({ min: 1 }).withMessage("Page must be a positive integer").toInt(),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("Limit must be between 1 and 100").toInt(),
+  query("status").optional().isIn(["success", "failed"]).withMessage("Invalid delivery status"),
+  validateRequest,
+  getWebhookDeliveries
+);
 router.get("/:id", webhookId, validateRequest, getWebhook);
 router.patch(
   "/:id",

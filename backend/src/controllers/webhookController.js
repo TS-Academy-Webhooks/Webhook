@@ -69,24 +69,28 @@ exports.deleteWebhook = async (req, res) => {
   return sendSuccess(res, "Webhook deleted successfully", { id: webhook._id });
 };
 
-// Get delivery logs for a specific webhook
 exports.getWebhookDeliveries = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deliveries = await DeliveryAttempt.find({ webhookId: id }).sort({
-      createdAt: -1,
-    });
-
-    res.json({
-      success: true,
-      message: "Delivery logs retrieved successfully",
-      data: deliveries,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong retrieving delivery logs",
-      data: null,
-    });
+  const webhook = await Webhook.findById(req.params.id);
+  if (!webhook) {
+    throw new AppError("Webhook not found", 404);
   }
+
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 20);
+  const filter = { webhookId: webhook._id };
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+  const [deliveries, totalItems] = await Promise.all([
+    DeliveryAttempt.find(filter)
+      .populate("eventId", "eventId type")
+      .sort({ attemptedAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    DeliveryAttempt.countDocuments(filter),
+  ]);
+  return sendSuccess(res, "Delivery logs retrieved successfully", {
+    deliveries,
+    pagination: { page, limit, totalItems, totalPages: Math.ceil(totalItems / limit) },
+  });
 };
