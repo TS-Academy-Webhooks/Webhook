@@ -1,5 +1,6 @@
 const { randomInt } = require("crypto");
 const Shipment = require("../models/Shipment");
+const User = require("../models/User");
 const AppError = require("../utils/AppError");
 
 const SHIPMENT_STATUSES = [
@@ -29,6 +30,13 @@ function generateTrackingNumber() {
 }
 
 async function createShipment(shipmentData) {
+  if (shipmentData.customerId) {
+    const customer = await User.findById(shipmentData.customerId);
+    if (!customer || customer.role !== "customer") {
+      throw new AppError("Shipment customer must be an existing customer account", 400);
+    }
+  }
+
   return Shipment.create({
     ...shipmentData,
     trackingNumber: generateTrackingNumber(),
