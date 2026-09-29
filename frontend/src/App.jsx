@@ -4,6 +4,7 @@ import Signup from "./pages/auth/Signup";
 import Deliveries from "./pages/deliveries/Deliveries";
 import DeliveryDetails from "./pages/deliveries/DeliveryDetails";
 import DeliveryHistory from "./pages/deliveries/DeliveryHistory";
+import EventDetails from "./pages/deliveries/EventDetails";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/deliveries" element={<Deliveries />} />
         <Route path="/deliveries/:id" element={<DeliveryDetails />} />
         <Route path="/webhooks/:webhookId/history" element={<DeliveryHistory />} />
+        <Route path="/events/:eventId" element={<EventDetails />} />
       </Routes>
     </BrowserRouter>
   );
