@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const mockDeliveries = [
   {
@@ -65,7 +65,15 @@ function Deliveries() {
                 onClick={() => navigate(`/deliveries/${delivery.id}`)}
                 className="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
               >
-                <td className="px-4 py-3">{delivery.webhookName}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    to={`/deliveries/${delivery.id}`}
+                    className="hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {delivery.webhookName}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {delivery.eventType}
                 </td>

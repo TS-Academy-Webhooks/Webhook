@@ -49,7 +49,9 @@ function statusStyles(status) {
 
 function EventDetails() {
   const { eventId } = useParams();
-  const event = mockEvents[eventId];
+  const event = Object.hasOwn(mockEvents, eventId)
+    ? mockEvents[eventId]
+    : undefined;
 
   if (!event) {
     return (

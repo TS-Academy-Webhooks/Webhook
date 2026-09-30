@@ -56,7 +56,9 @@ function statusStyles(status) {
 
 function DeliveryHistory() {
   const { webhookId } = useParams();
-  const webhook = mockHistory[webhookId];
+  const webhook = Object.hasOwn(mockHistory, webhookId)
+    ? mockHistory[webhookId]
+    : undefined;
 
   if (!webhook) {
     return (

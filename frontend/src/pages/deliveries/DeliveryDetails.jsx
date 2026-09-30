@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
-const mockDeliveries = {
+const initialDeliveries = {
   del_001: {
     id: "del_001",
     webhookName: "Order Confirmation",
@@ -67,7 +68,27 @@ function statusStyles(status) {
 
 function DeliveryDetails() {
   const { id } = useParams();
-  const delivery = mockDeliveries[id];
+  const initial = Object.hasOwn(initialDeliveries, id)
+    ? initialDeliveries[id]
+    : undefined;
+  const [delivery, setDelivery] = useState(initial);
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  const handleRetry = () => {
+    setIsRetrying(true);
+    setTimeout(() => {
+      setDelivery((prev) => ({
+        ...prev,
+        status: "success",
+        attempts: prev.attempts + 1,
+        response: `{
+  "status": 200,
+  "message": "OK (retried)"
+}`,
+      }));
+      setIsRetrying(false);
+    }, 1500);
+  };
 
   if (!delivery) {
     return (
@@ -124,7 +145,7 @@ function DeliveryDetails() {
           <h2 className="text-sm font-medium text-muted-foreground mb-2">
             Request
           </h2>
-          <pre className="text-xs bg-muted/50 rounded p-3 overflow-x-auto">
+          <pre className="text-xs bg-muted/50 rounded p-3 overflow-x-auto text-left">
             {delivery.request}
           </pre>
         </div>
@@ -132,15 +153,19 @@ function DeliveryDetails() {
           <h2 className="text-sm font-medium text-muted-foreground mb-2">
             Response
           </h2>
-          <pre className="text-xs bg-muted/50 rounded p-3 overflow-x-auto">
+          <pre className="text-xs bg-muted/50 rounded p-3 overflow-x-auto text-left">
             {delivery.response}
           </pre>
         </div>
       </div>
 
       {delivery.status === "failed" && (
-        <button className="mt-6 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
-          Retry Delivery
+        <button
+          onClick={handleRetry}
+          disabled={isRetrying}
+          className="mt-6 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isRetrying ? "Retrying..." : "Retry Delivery"}
         </button>
       )}
     </div>
