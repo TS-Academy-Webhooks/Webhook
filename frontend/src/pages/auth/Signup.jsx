@@ -54,7 +54,6 @@ function Signup() {
             );
 
             // Copied out await register({ name: name.trim(), email: email.trim(), password });
-            
             navigate('/login'); //, { state: { justRegistered: true, email: email.trim() } });
 
         } catch (error) {
@@ -66,12 +65,11 @@ function Signup() {
                 );
             } else {
                 setErrorMessage("Something went wrong. Please try again");
-            }    
+            }
         } finally {
             setSubmitting(false);
         }
     };
-  
     return (
         <main className="auth-page">
             <section className="auth-card">

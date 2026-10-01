@@ -33,7 +33,7 @@ function ForgotPassword() {
             );
             } else {
                 setErrorMessage("Something went wrong. Please try again");
-            }    
+            }
     } finally {
         setSubmitting(false);
     }
