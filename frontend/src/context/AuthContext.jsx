@@ -1,9 +1,9 @@
 // src/context/AuthContext.jsx
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { login as loginRequest, getCurrentUser } from '../services/authService';
+import { login as loginRequest, register as registerRequest, getCurrentUser } from '../services/authService';
 import { AUTH_TOKEN_KEY } from '../services/api';
 
-const AuthContext = createContext(undefined);
+export const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
@@ -46,20 +46,17 @@ export function AuthProvider({ children }) {
         return loggedInUser;
     }, []);
 
+    const register = useCallback(async (userData) => {
+    return await registerRequest(userData);
+    }, []);
+
     const logout = useCallback(() => {
         localStorage.removeItem(AUTH_TOKEN_KEY);
         setUser(null);
     }, []);
 
-    const value = { user, isAuthenticated: Boolean(user), loading, login, logout };
+    const value = { user, isAuthenticated: Boolean(user), loading, login, register, logout };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}
