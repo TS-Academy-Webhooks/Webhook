@@ -19,11 +19,9 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
 
-                    {/* No auth state to check yet on "/" itself — ProtectedRoute
+                    {/* No auth state to check yet on "*" itself — ProtectedRoute
                         below decides whether this actually lands on the
                         dashboard or bounces to /login. */}
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
                     <Route element={<ProtectedRoute />}>
                         <Route element={<DashboardLayout />}>
                             <Route path="/dashboard" element={<Dashboard />} />
@@ -36,6 +34,8 @@ function App() {
                     </Route>
 
                     <Route path="/forgot-password" element={<h1>Forgot Password</h1>} />
+
+                    <Route path="*" element={<Navigate to="/login" replace />} />
                 </Routes>
             </AuthProvider>
         </BrowserRouter>

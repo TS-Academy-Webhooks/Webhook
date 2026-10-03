@@ -1,56 +1,58 @@
 // src/pages/auth/Login.jsx
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { Input } from '../../components/common/Input';
-import { Button } from '../../components/common/Button';
-import './Login.css';
+import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from "../../hooks/useAuth";
 
-export default function Login() {
-    const { login } = useAuth();
+function Login() {
     const navigate = useNavigate();
-    const location = useLocation();
 
-    const [email, setEmail] = useState(location.state?.email || '');
-    const [password, setPassword] = useState('');
-    const [fieldErrors, setFieldErrors] = useState({});
-    const [formError, setFormError] = useState(null);
+    const { login } = useAuth();
+
+    // Form state.
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    });
+
+    // Used to display API/form errors.
+    const [errorMessage, setErrorMessage] = useState("");
+
+    // Used to disable the button while logging in.
     const [submitting, setSubmitting] = useState(false);
-    const justRegistered = Boolean(location.state?.justRegistered);
 
-    // Sent here by ProtectedRoute? Return to that page after login instead
-    // of always landing on the dashboard.
-    const redirectTo = location.state?.from
-        ? location.state.from.pathname + location.state.from.search
-        : '/dashboard';
+    // Update the corresponding field when the user types.
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+
+        setFormData((previousData) => ({
+            ...previousData,
+            [name]: value,
+        }));
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        const errors = {};
-        if (!email.trim()) errors.email = 'Email is required.';
-        if (!password) errors.password = 'Password is required.';
-        if (Object.keys(errors).length > 0) {
-            setFieldErrors(errors);
-            return;
-        }
-
-        setFieldErrors({});
-        setFormError(null);
+        setErrorMessage("");
         setSubmitting(true);
+
         try {
-            await login({ email: email.trim(), password });
-            navigate(redirectTo, { replace: true });
-        } catch (err) {
-            // Deliberately vague on which field is wrong for a login failure —
-            // "email or password is incorrect" avoids confirming which emails
-            // are registered.
-            if (err?.status === 401) {
-                setFormError('Email or password is incorrect.');
-            } else if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
-                setFieldErrors(err.fieldErrors);
+            // Send login information to the authentication context.
+            await login(formData.email, formData.password);
+
+            // Navigate to the protected dashboard after successful login.
+            navigate("/dashboard");
+
+        } catch (error) {
+        // Display a backend error if one exists.
+            if (axios.isAxiosError(error)) {
+                setErrorMessage(
+                    error.response?.data?.message ||
+                    "Unable to log in. Please check your credentials."
+            );
             } else {
-                setFormError(err?.message || 'Unable to log in. Please try again.');
+                setErrorMessage("Something went wrong. Please try again");
             }
         } finally {
             setSubmitting(false);
@@ -58,53 +60,71 @@ export default function Login() {
     };
 
     return (
-        <div className="login-page">
-            <form className="login-page__card" onSubmit={handleSubmit} noValidate>
-                <h1 className="login-page__title">Log in</h1>
+        <main className="auth-page">
+            <section className="auth-card">
+                <div className="auth-header">
+                    <div className="brand-mark">W</div>
 
-                {justRegistered && !formError && (
-                    <p className="login-page__success">Account created — log in to continue.</p>
-                )}
+                    <h1 className="auth-title">Welcome back</h1>
 
-                {formError && (
-                    <p className="login-page__error" role="alert">
-                        {formError}
+                    <p className="auth-description">
+                        Sign in to manage your webhooks and monitor event deliveries.
                     </p>
-                )}
-
-                <Input
-                    label="Email"
-                    type="email"
-                    autoComplete="username"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    error={fieldErrors.email}
-                    placeholder="you@example.com"
-                />
-
-                <Input
-                    label="Password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    error={fieldErrors.password}
-                    placeholder="••••••••"
-                />
-
-                <div className="login-page__footer">
-                    <Link to="/forgot-password" className="login-page__forgot-link">
-                        Forgot password?
-                    </Link>
-                    <Button type="submit" variant="primary" loading={submitting}>
-                        Log in
-                    </Button>
                 </div>
 
-                <Link to="/signup" className="login-page__signup-link">
-                    Don't have an account? Sign up
-                </Link>
-            </form>
-        </div>
+                {errorMessage && <div className="alert error-alert">{errorMessage}</div>}
+
+                <form onSubmit={handleSubmit} className="auth-form">
+                    <div className="form-group">
+                        <label htmlFor="email">Email address</label>
+
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <div className="form-label-row">
+                            <label htmlFor="password">Password</label>
+
+                            <Link to="/forgot-password">
+                                Forgot password?
+                            </Link>
+                        </div>
+
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="Enter your password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="primary-button"
+                        disabled={submitting}
+                    >
+                        {submitting ? "Signing in..." : "Sign in"}
+                    </button>
+                </form>
+
+                <p className="auth-footer">
+                    Don't have an account?{" "}
+                    <Link to="/signup">Create an account</Link>
+                </p>
+            </section>
+        </main>
     );
 }
+
+export default Login;
