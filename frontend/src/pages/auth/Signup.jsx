@@ -1,110 +1,164 @@
 // src/pages/auth/Signup.jsx
 import { useState } from 'react';
+import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../../services/authService';
-import { validateSignup } from '../../utils/validateSignup';
-import { Input } from '../../components/common/Input';
-import { Button } from '../../components/common/Button';
-import './Signup.css';
+import { useAuth } from "../../hooks/useAuth";
 
-export default function Signup() {
+
+function Signup() {
     const navigate = useNavigate();
 
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [fieldErrors, setFieldErrors] = useState({});
-    const [formError, setFormError] = useState(null);
+    const { register } = useAuth();
+
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+    });
+
+    const [errorMessage, setErrorMessage] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    // Copied out const [name, setName] = useState('');
+
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+
+        setFormData((previousData) => ({
+            ...previousData,
+            [name]: value,
+        }));
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        const clientErrors = validateSignup({ name, email, password, confirmPassword });
-        if (Object.keys(clientErrors).length > 0) {
-            setFieldErrors(clientErrors);
-            return;
-        }
+        setErrorMessage("");
 
-        setFieldErrors({});
-        setFormError(null);
+        // Check that both password fields match.
+        if (formData.password !== formData.confirmPassword) {
+            setErrorMessage("Passwords do not match.");
+            return;
+    }
+
+    // Copied out const clientErrors = validateSignup({ name, email, password, confirmPassword });
+
         setSubmitting(true);
+
         try {
-            await register({ name: name.trim(), email: email.trim(), password });
-            // No auto-login (see authService.register) — send them to Login
-            // with the email prefilled and a success banner.
-            navigate('/login', { state: { justRegistered: true, email: email.trim() } });
-        } catch (err) {
-            if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
-                setFieldErrors(err.fieldErrors);
+            await register(
+                formData.name,
+                formData.email,
+                formData.password
+            );
+
+            // Copied out await register({ name: name.trim(), email: email.trim(), password });
+            navigate('/login'); //, { state: { justRegistered: true, email: email.trim() } });
+
+        } catch (error) {
+        // Display a backend error if one exists.
+            if (axios.isAxiosError(error)) {
+                setErrorMessage(
+                    error.response?.data?.message ||
+                    "Unable to create your account."
+                );
             } else {
-                setFormError(err?.message || 'Unable to create your account. Please try again.');
+                setErrorMessage("Something went wrong. Please try again");
             }
         } finally {
             setSubmitting(false);
         }
     };
-
     return (
-        <div className="signup-page">
-            <form className="signup-page__card" onSubmit={handleSubmit} noValidate>
-                <h1 className="signup-page__title">Create an account</h1>
+        <main className="auth-page">
+            <section className="auth-card">
+                <div className="auth-header">
+                    <div className="brand-mark">W</div>
 
-                {formError && (
-                    <p className="signup-page__error" role="alert">
-                        {formError}
+                    <h1 className="auth-title">Create your account</h1>
+
+                    <p className="auth-description">
+                        Start managing your webhook events and delivery attempts.
                     </p>
-                )}
-
-                <Input
-                    label="Name"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    error={fieldErrors.name}
-                    placeholder="Jane Doe"
-                />
-
-                <Input
-                    label="Email"
-                    type="email"
-                    autoComplete="username"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    error={fieldErrors.email}
-                    placeholder="you@example.com"
-                />
-
-                <Input
-                    label="Password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    error={fieldErrors.password}
-                    placeholder="At least 8 characters"
-                />
-
-                <Input
-                    label="Confirm password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    error={fieldErrors.confirmPassword}
-                    placeholder="••••••••"
-                />
-
-                <div className="signup-page__footer">
-                    <Link to="/login" className="signup-page__login-link">
-                        Already have an account? Log in
-                    </Link>
-                    <Button type="submit" variant="primary" loading={submitting}>
-                        Sign up
-                    </Button>
                 </div>
-            </form>
-        </div>
+
+                {errorMessage && <div className="alert error-alert">{errorMessage}</div>}
+
+                <form onSubmit={handleSubmit} className="auth-form">
+                    <div className="form-group">
+                        <label htmlFor="name">Full name</label>
+
+                        <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            placeholder="John Doe"
+                            value={formData.name}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="email">Email address</label>
+
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="Create a password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                            minLength={8}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="confirmPassword">Confirm password</label>
+
+                    <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                    />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="primary-button"
+                        disabled={submitting}
+                    >
+                        {submitting ? "Creating account..." : "Create account"}
+                    </button>
+                </form>
+
+                <p className="auth-footer">
+                    Already have an account?{" "}
+                    <Link to="/login">Sign in</Link>
+                </p>
+            </section>
+        </main>
     );
 }
+
+export default Signup;
