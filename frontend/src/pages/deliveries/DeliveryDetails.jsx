@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getDelivery, retryDelivery } from "../../services/deliveryService";
 
@@ -38,6 +38,29 @@ function DeliveryDetails() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryMessage, setRetryMessage] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [currentId, setCurrentId] = useState(id);
+
+  // Used to ignore a retry that belongs to a delivery we have left
+  const retryRun = useRef(0);
+  const retryTimer = useRef(null);
+
+  // When the delivery ID changes, reset everything for the new delivery
+  if (currentId !== id) {
+    setCurrentId(id);
+    setIsRetrying(false);
+    setRetryMessage("");
+    setLoading(true);
+    setError("");
+    setDelivery(null);
+  }
+
+  // When the ID changes (or the page closes), cancel any pending retry
+  useEffect(() => {
+    return () => {
+      retryRun.current += 1;
+      clearTimeout(retryTimer.current);
+    };
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,17 +87,22 @@ function DeliveryDetails() {
   }, [id, reloadKey, navigate]);
 
   const handleRetry = async () => {
+    retryRun.current += 1;
+    const run = retryRun.current;
     setIsRetrying(true);
     setRetryMessage("");
     try {
       await retryDelivery(id);
+      if (run !== retryRun.current) return;
       setRetryMessage("Retry queued. Refreshing...");
-      setTimeout(() => {
+      retryTimer.current = setTimeout(() => {
+        if (run !== retryRun.current) return;
         setReloadKey((k) => k + 1);
         setIsRetrying(false);
         setRetryMessage("");
       }, 3000);
     } catch (err) {
+      if (run !== retryRun.current) return;
       setRetryMessage(err.message);
       setIsRetrying(false);
     }

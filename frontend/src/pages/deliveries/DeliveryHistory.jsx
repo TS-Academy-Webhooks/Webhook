@@ -25,6 +25,16 @@ function DeliveryHistory() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentWebhookId, setCurrentWebhookId] = useState(webhookId);
+
+  // When the webhook changes, go back to page 1 and show the loading state
+  if (currentWebhookId !== webhookId) {
+    setCurrentWebhookId(webhookId);
+    setPage(1);
+    setLoading(true);
+    setError("");
+    setDeliveries([]);
+  }
 
   useEffect(() => {
     let cancelled = false;
