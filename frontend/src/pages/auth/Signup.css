@@ -1,0 +1,7 @@
+@import "./Login.css";
+
+.auth-card small {
+    color: var(--text, #6b6375);
+    font-size: 12px;
+    font-weight: 400;
+}

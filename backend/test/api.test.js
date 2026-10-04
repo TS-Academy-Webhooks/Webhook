@@ -1,20 +1,27 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 const User = require("../src/models/User");
 const Shipment = require("../src/models/Shipment");
+const RefreshSession = require("../src/models/RefreshSession");
 const Webhook = require("../src/models/webhook");
 const Event = require("../src/models/event");
 const DeliveryAttempt = require("../src/models/DeliveryAttempt");
 const app = require("../src/app");
 const validateWebhookUrl = require("../src/utils/validateWebhookUrl");
 const { ALLOWED_STATUS_TRANSITIONS } = require("../src/services/shipmentService");
+const authorizeRoles = require("../src/middleware/authorizeRoles");
+const authService = require("../src/services/authService");
 
 test("models validate required formats, defaults, and references", async () => {
-  assert.equal(User.schema.path("role"), undefined);
+  assert.deepEqual(User.schema.path("role").enumValues, ["admin", "customer"]);
+  assert.equal(new User({ name: "Customer", email: "customer@example.com", passwordHash: "hash" }).role, "customer");
   assert.equal(User.schema.path("passwordHash").options.select, false);
   assert.equal(Webhook.schema.path("ownerId"), undefined);
   assert.equal(Webhook.schema.path("secret").options.select, false);
+  assert.equal(Shipment.schema.path("customerId").options.ref, "User");
+  assert.equal(RefreshSession.schema.path("tokenHash").options.select, false);
 
   const shipment = new Shipment({
     trackingNumber: "TRK-12345",
@@ -43,6 +50,69 @@ test("models validate required formats, defaults, and references", async () => {
   }).validate();
   assert.equal(DeliveryAttempt.schema.path("eventId").options.ref, "Event");
   assert.ok(DeliveryAttempt.schema.indexes().some(([keys]) => keys.webhookId === 1 && keys.eventId === 1));
+});
+
+test("access tokens are short-lived and bound to a revocable session", () => {
+  const previousSecret = process.env.JWT_SECRET;
+  process.env.JWT_SECRET = "test-only-secret-with-at-least-32-characters";
+  try {
+    const userId = new mongoose.Types.ObjectId();
+    const sessionId = new mongoose.Types.ObjectId();
+    const token = authService.createAccessToken({ _id: userId }, sessionId);
+    const payload = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ["HS256"],
+      issuer: authService.JWT_ISSUER,
+      audience: authService.JWT_AUDIENCE,
+    });
+    assert.equal(payload.sub, userId.toString());
+    assert.equal(payload.sid, sessionId.toString());
+    assert.ok(payload.exp - payload.iat <= 15 * 60);
+  } finally {
+    if (previousSecret === undefined) delete process.env.JWT_SECRET;
+    else process.env.JWT_SECRET = previousSecret;
+  }
+});
+
+test("role middleware allows admins and rejects customers from admin operations", () => {
+  let adminError;
+  authorizeRoles("admin")({ user: { role: "admin" } }, {}, (error) => { adminError = error; });
+  assert.equal(adminError, undefined);
+
+  let customerError;
+  authorizeRoles("admin")({ user: { role: "customer" } }, {}, (error) => { customerError = error; });
+  assert.equal(customerError.statusCode, 403);
+});
+
+test("refresh cookies are HttpOnly, scoped, and secure in production", () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousSameSite = process.env.REFRESH_COOKIE_SAME_SITE;
+  try {
+    process.env.NODE_ENV = "production";
+    process.env.REFRESH_COOKIE_SAME_SITE = "strict";
+    let cookie;
+    authService.setRefreshCookie({
+      cookie(name, value, options) {
+        cookie = { name, value, options };
+      },
+    }, "test-refresh-token");
+    const options = cookie.options;
+    assert.equal(cookie.name, "__Secure-refreshToken");
+    assert.equal(cookie.value, "test-refresh-token");
+    assert.equal(options.httpOnly, true);
+    assert.equal(options.secure, true);
+    assert.equal(options.sameSite, "strict");
+    assert.equal(options.path, "/api/auth");
+    assert.equal(authService.getRefreshCookieName(), "__Secure-refreshToken");
+
+    process.env.NODE_ENV = "development";
+    process.env.REFRESH_COOKIE_SAME_SITE = "none";
+    assert.throws(() => authService.setRefreshCookie({ cookie() {} }, "test-token"), { statusCode: 500 });
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+    if (previousSameSite === undefined) delete process.env.REFRESH_COOKIE_SAME_SITE;
+    else process.env.REFRESH_COOKIE_SAME_SITE = previousSameSite;
+  }
 });
 
 test("shipment transition map matches the allowed workflow", () => {
@@ -100,6 +170,19 @@ test("public and protected routes use the standard response envelope", async (t)
   assert.equal(protectedResponse.status, 401);
   assert.equal(protectedBody.success, false);
   assert.equal(protectedBody.data, null);
+
+  const missingMeResponse = await fetch(`${baseUrl}/api/auth/me`);
+  assert.equal(missingMeResponse.status, 401);
+
+  const weakRegistrationResponse = await fetch(`${baseUrl}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "Test", email: "weak@example.com", password: "short-pass", role: "admin" }),
+  });
+  assert.equal(weakRegistrationResponse.status, 400);
+
+  const emptyRefreshResponse = await fetch(`${baseUrl}/api/auth/refresh`, { method: "POST" });
+  assert.equal(emptyRefreshResponse.status, 401);
 
   const trackingResponse = await fetch(`${baseUrl}/api/tracking/invalid`);
   assert.equal(trackingResponse.status, 400);
