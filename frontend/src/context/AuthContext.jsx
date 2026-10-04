@@ -63,7 +63,8 @@ export function AuthProvider({ children }) {
 
     const login = useCallback(async (credentials) => {
         const { token, user: loggedInUser } = await loginRequest(credentials);
-        saveToken(token);
+        if (!token) throw new Error('Login response did not include a token.');
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
         setUser(loggedInUser);
         return loggedInUser;
     }, []);
