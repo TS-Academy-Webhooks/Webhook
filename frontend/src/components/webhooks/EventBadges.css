@@ -1,0 +1,27 @@
+/* src/components/webhooks/EventBadges.css */
+.event-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.event-badges__chip {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--primary) 12%, transparent);
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.event-badges__chip--more {
+    background: var(--muted);
+    color: var(--muted-foreground);
+}
+
+.event-badges__empty {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    font-style: italic;
+}

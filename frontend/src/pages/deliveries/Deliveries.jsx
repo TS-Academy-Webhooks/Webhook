@@ -1,157 +1,115 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { Pagination } from "../../components/common/Pagination";
+import { Loader } from "../../components/common/Loader";
 import { getDeliveries } from "../../services/deliveryService";
+import { formatDate } from "../../utils/formatDate";
 
-function statusStyles(status) {
-  switch (status) {
-    case "success":
-      return "bg-primary/10 text-primary";
-    case "failed":
-      return "bg-destructive/10 text-destructive";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
-}
+export default function Deliveries() {
+    const [searchParams] = useSearchParams();
+    const webhookId = searchParams.get("webhookId");
+    const [status, setStatus] = useState("");
+    const [page, setPage] = useState(1);
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString() : "—";
-}
+    useEffect(() => {
+        let active = true;
+        setLoading(true);
+        setError("");
+        getDeliveries({
+            page,
+            limit: 15,
+            status: status || undefined,
+            webhookId: webhookId || undefined,
+        })
+            .then((data) => {
+                if (active) setResult(data);
+            })
+            .catch((requestError) => {
+                if (active) setError(requestError.message);
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+        return () => {
+            active = false;
+        };
+    }, [page, status, webhookId]);
 
-function Deliveries() {
-  const navigate = useNavigate();
-  const [deliveries, setDeliveries] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    getDeliveries(page)
-      .then((data) => {
-        if (cancelled) return;
-        setDeliveries(data.items);
-        setPagination(data.pagination);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        if (err.status === 401) {
-          navigate("/");
-          return;
-        }
-        setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [page, navigate]);
-
-  const goToPage = (p) => {
-    setLoading(true);
-    setError("");
-    setPage(p);
-  };
-
-  return (
-    <div className="p-6 bg-background text-foreground min-h-screen">
-      <h1 className="text-2xl font-semibold mb-6">Deliveries</h1>
-
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted/50 text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-medium">Webhook</th>
-              <th className="px-4 py-3 font-medium">Event Type</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Attempts</th>
-              <th className="px-4 py-3 font-medium">Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
-                  Loading deliveries...
-                </td>
-              </tr>
-            )}
-            {!loading && error && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-destructive">
-                  {error}
-                </td>
-              </tr>
-            )}
-            {!loading && !error && deliveries.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
-                  No deliveries yet.
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              !error &&
-              deliveries.map((delivery) => (
-                <tr
-                  key={delivery.id}
-                  onClick={() => navigate(`/deliveries/${delivery.id}`)}
-                  className="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
+    return (
+        <section className="feature-page">
+            <header className="feature-page__header">
+                <div>
+                    <h1>Delivery attempts</h1>
+                    <p className="feature-page__muted">
+                        Review webhook delivery results and retry failed attempts.
+                    </p>
+                </div>
+                {webhookId && <Link to="/webhooks">Back to endpoints</Link>}
+            </header>
+            <div className="feature-page__toolbar">
+                <select
+                    aria-label="Filter delivery status"
+                    value={status}
+                    onChange={(event) => {
+                        setStatus(event.target.value);
+                        setPage(1);
+                    }}
                 >
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`/deliveries/${delivery.id}`}
-                      className="hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {delivery.webhook?.name ?? "—"}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {delivery.event?.type ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles(
-                        delivery.status
-                      )}`}
-                    >
-                      {delivery.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{delivery.attemptCount}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(delivery.createdAt)}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between mt-4 text-sm">
-        <button
-          onClick={() => goToPage(page - 1)}
-          disabled={page <= 1 || loading}
-          className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="text-muted-foreground">
-          Page {pagination.page} of {pagination.totalPages}
-        </span>
-        <button
-          onClick={() => goToPage(page + 1)}
-          disabled={page >= pagination.totalPages || loading}
-          className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-  );
+                    <option value="">All results</option>
+                    <option value="success">Successful</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </div>
+            {error && <p role="alert" className="feature-page__error">{error}</p>}
+            {loading ? (
+                <Loader showLabel label="Loading delivery attempts" />
+            ) : (
+                <>
+                    <div className="feature-page__table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Delivery</th>
+                                    <th>Event</th>
+                                    <th>Endpoint</th>
+                                    <th>Status</th>
+                                    <th>Attempt</th>
+                                    <th>HTTP status</th>
+                                    <th>Response time</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(result?.items ?? []).map((delivery) => (
+                                    <tr key={delivery.id}>
+                                        <td><Link to={`/deliveries/${delivery.id}`}>{delivery.id}</Link></td>
+                                        <td>
+                                            {delivery.event?.eventId ? (
+                                                <Link to={`/events/${delivery.event.id ?? delivery.event._id}`}>
+                                                    {delivery.event.eventId}
+                                                </Link>
+                                            ) : "—"}
+                                        </td>
+                                        <td>{delivery.webhook?.name ?? delivery.webhook?.url ?? "—"}</td>
+                                        <td>{delivery.status}</td>
+                                        <td>{delivery.attemptNumber ?? "—"}</td>
+                                        <td>{delivery.httpStatus ?? "—"}</td>
+                                        <td>{delivery.duration != null ? `${delivery.duration} ms` : "—"}</td>
+                                        <td>{formatDate(delivery.attemptedAt ?? delivery.createdAt, { withTime: true })}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {!result?.items.length && (
+                        <p className="feature-page__muted">No delivery attempts found.</p>
+                    )}
+                    <Pagination pagination={result?.pagination} onPageChange={setPage} />
+                </>
+            )}
+        </section>
+    );
 }
-
-export default Deliveries;

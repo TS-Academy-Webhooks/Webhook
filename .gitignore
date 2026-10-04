@@ -1,9 +1,4 @@
-node_modules/
-dist/
-dist-ssr/
-
+.idea/
 .env
 .env.*
 !.env.example
-
-*.log

@@ -1,0 +1,6 @@
+/* src/components/webhooks/WebhookStatus.css */
+.webhook-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+}

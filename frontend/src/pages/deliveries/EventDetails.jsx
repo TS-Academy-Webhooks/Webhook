@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getEvent } from "../../services/deliveryService";
+import { getEvent, resendDelivery, getDeliveries } from "../../services/deliveryService";
 
 function statusStyles(status) {
   switch (status) {
@@ -29,6 +29,8 @@ function EventDetails() {
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryingId, setRetryingId] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +56,21 @@ function EventDetails() {
       cancelled = true;
     };
   }, [eventId, navigate]);
+
+  const handleRetry = async (deliveryId) => {
+    setRetryingId(deliveryId);
+    setMessage("");
+    try {
+      await resendDelivery(deliveryId);
+      setMessage("Retry request submitted as a new delivery attempt.");
+      const result = await getDeliveries({ eventId, page: 1, limit: 100 });
+      setDeliveries(result.items);
+    } catch (retryError) {
+      setMessage(retryError.message);
+    } finally {
+      setRetryingId("");
+    }
+  };
 
   if (loading) {
     return (
@@ -118,6 +135,7 @@ function EventDetails() {
         <h2 className="text-sm font-medium text-muted-foreground p-4 pb-2">
           Related deliveries
         </h2>
+        {message && <p className="px-4 text-sm text-muted-foreground" role="status">{message}</p>}
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/50 text-muted-foreground">
             <tr>
@@ -125,12 +143,13 @@ function EventDetails() {
               <th className="px-4 py-2 font-medium">Status</th>
               <th className="px-4 py-2 font-medium">Attempts</th>
               <th className="px-4 py-2 font-medium">Time</th>
+              <th className="px-4 py-2 font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
             {deliveries.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-4 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-4 text-center text-muted-foreground">
                   No deliveries for this event.
                 </td>
               </tr>
@@ -154,6 +173,17 @@ function EventDetails() {
                 <td className="px-4 py-2">{d.attemptCount}</td>
                 <td className="px-4 py-2 text-muted-foreground">
                   {formatDate(d.createdAt)}
+                </td>
+                <td className="px-4 py-2">
+                  {d.status === "failed" && (
+                    <button
+                      type="button"
+                      disabled={retryingId === d.id}
+                      onClick={(e) => { e.stopPropagation(); handleRetry(d.id); }}
+                    >
+                      {retryingId === d.id ? "Retrying…" : "Retry"}
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

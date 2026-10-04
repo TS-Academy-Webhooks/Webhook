@@ -1,0 +1,81 @@
+/* src/components/common/Button.css */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn--primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.btn--primary:hover:not(:disabled):not([aria-disabled='true']) {
+    background: color-mix(in oklab, var(--primary) 88%, black);
+}
+
+.btn--secondary {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    border-color: var(--border);
+}
+
+.btn--secondary:hover:not(:disabled):not([aria-disabled='true']) {
+    background: color-mix(in oklab, var(--secondary) 85%, black);
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--foreground);
+}
+
+.btn--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--secondary);
+}
+
+.btn--destructive {
+    background: var(--destructive);
+    color: var(--primary-foreground);
+}
+
+.btn--destructive:hover:not(:disabled):not([aria-disabled='true']) {
+    background: color-mix(in oklab, var(--destructive) 88%, black);
+}
+
+.btn__spinner {
+    width: 0.875rem;
+    height: 0.875rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

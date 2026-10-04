@@ -1,31 +1,58 @@
-const BASE_URL =
-  import.meta.env.VITE_BACKEND_API_URL || "http://localhost:5000/api";
+import axios from "axios";
 
-function getToken() {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
+export const AUTH_TOKEN_KEY = "auth_token";
+
+const api = axios.create({
+    baseURL:
+        import.meta.env.VITE_API_BASE_URL ||
+        import.meta.env.VITE_BACKEND_API_URL ||
+        "http://localhost:5000/api",
+    headers: { "Content-Type": "application/json" },
+    withCredentials: true,
+});
+
+function readToken() {
+    try {
+        return localStorage.getItem(AUTH_TOKEN_KEY);
+    } catch {
+        return null;
+    }
 }
 
-export async function apiRequest(path, { method = "GET", body } = {}) {
-  const headers = { "Content-Type": "application/json" };
-  const token = getToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use((config) => {
+    const token = readToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            try {
+                localStorage.removeItem(AUTH_TOKEN_KEY);
+            } catch {
+                // Storage may be unavailable in restricted browser contexts.
+            }
+        }
+        return Promise.reject(error);
+    },
+);
 
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success) {
-    const error = new Error(json?.message || "Something went wrong");
-    error.status = res.status;
-    throw error;
-  }
-  return json.data;
+export async function apiRequest(path, { method = "GET", body, params } = {}) {
+    try {
+        const response = await api.request({ url: path, method, data: body, params });
+        return response.data.data;
+    } catch (error) {
+        const normalized = new Error(
+            error.response?.data?.message || error.message || "Something went wrong",
+        );
+        normalized.status = error.response?.status ?? null;
+        normalized.response = error.response;
+        throw normalized;
+    }
 }
+
+export default api;

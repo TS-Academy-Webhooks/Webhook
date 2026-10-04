@@ -1,0 +1,65 @@
+/* src/components/common/Modal.css */
+
+.modal__backdrop {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in oklab, black 50%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+}
+
+.modal__dialog {
+    background: var(--card);
+    color: var(--card-foreground);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 28rem;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px color-mix(in oklab, black 25%, transparent);
+}
+
+.modal__dialog:focus-visible {
+    outline: none;
+}
+
+.modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal__title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.modal__close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.modal__close:hover {
+    color: var(--foreground);
+}
+
+.modal__close:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.modal__body {
+    padding: 1.25rem;
+}
