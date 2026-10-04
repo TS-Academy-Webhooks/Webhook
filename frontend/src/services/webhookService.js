@@ -70,7 +70,9 @@ export async function getWebhook(id) {
  * @param {{ name: string, url: string, events: string[], isActive?: boolean }} payload
  */
 export async function createWebhook(payload) {
-    if (payload.description || payload.events?.some((event) => event.startsWith('order.'))) return createMockEndpoint(payload);
+    if (payload.description || payload.events?.some((event) => event.startsWith('order.'))) {
+        throw { message: 'The connected API does not support endpoint descriptions or order.* subscriptions yet.', fieldErrors: {} };
+    }
     try {
         const { name, url, events } = payload;
         const { data } = await api.post('/webhooks', { name, url, events, active: payload.isActive ?? true });
