@@ -50,7 +50,7 @@ exports.updateWebhook = async (req, res) => {
   }
 
   const webhook = await Webhook.findByIdAndUpdate(req.params.id, updates, {
-    new: true,
+    returnDocument: "after",
     runValidators: true,
   });
   if (!webhook) {

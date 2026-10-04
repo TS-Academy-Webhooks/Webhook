@@ -1,47 +1,58 @@
-import axios from 'axios';
+import axios from "axios";
 
-// --- Token storage convention -------------------------------------------
-// Whoever builds the auth pages (login/register) should store the JWT
-// under this exact key on success, and clear it on logout:
-//   localStorage.setItem(AUTH_TOKEN_KEY, token)
-// If the team prefers a different storage strategy (httpOnly cookie,
-// a context/state manager instead of localStorage, etc.), this is the
-// only place that needs to change — every service imports `api` from here.
-export const AUTH_TOKEN_KEY = 'auth_token';
-
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+export const AUTH_TOKEN_KEY = "auth_token";
 
 const api = axios.create({
-    baseURL,
-    headers: { 'Content-Type': 'application/json' },
+    baseURL:
+        import.meta.env.VITE_API_BASE_URL ||
+        import.meta.env.VITE_BACKEND_API_URL ||
+        "http://localhost:5000/api",
+    headers: { "Content-Type": "application/json" },
+    withCredentials: true,
 });
 
-// Attach the JWT to every outgoing request, if one is stored.
+function readToken() {
+    try {
+        return localStorage.getItem(AUTH_TOKEN_KEY);
+    } catch {
+        return null;
+    }
+}
+
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = readToken();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 });
 
-// Global 401 handling: an expired/invalid token clears itself and sends
-// the user back to login, rather than every page having to check for this.
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem(AUTH_TOKEN_KEY);
-            // Avoid an import cycle with react-router here; a hard redirect is
-            // fine for a 401 since app state is invalid anyway.
-            // TODO: once the login page exists, uncomment this redirect. For now, just log the 401 so we can see it in the console.
-            console.warn('Unauthorized (401) response received. Redirecting to login.');
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
+            try {
+                localStorage.removeItem(AUTH_TOKEN_KEY);
+            } catch {
+                // Storage may be unavailable in restricted browser contexts.
             }
         }
         return Promise.reject(error);
-    }
+    },
 );
+
+export async function apiRequest(path, { method = "GET", body, params } = {}) {
+    try {
+        const response = await api.request({ url: path, method, data: body, params });
+        return response.data.data;
+    } catch (error) {
+        const normalized = new Error(
+            error.response?.data?.message || error.message || "Something went wrong",
+        );
+        normalized.status = error.response?.status ?? null;
+        normalized.response = error.response;
+        throw normalized;
+    }
+}
 
 export default api;

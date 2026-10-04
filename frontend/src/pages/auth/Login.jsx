@@ -1,63 +1,30 @@
-// src/pages/auth/Login.jsx
-import { useState } from 'react';
-import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
-function Login() {
-    const navigate = useNavigate();
-
+export default function Login() {
     const { login } = useAuth();
-
-    // Form state.
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-    });
-
-    // Used to display API/form errors.
-    const [errorMessage, setErrorMessage] = useState("");
-
-    // Used to disable the button while logging in.
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
-    // Update the corresponding field when the user types.
-    const handleChange = (event) => {
-        const { name, value } = event.target;
-
-        setFormData((previousData) => ({
-            ...previousData,
-            [name]: value,
-        }));
-    };
-
-    const handleSubmit = async (event) => {
+    async function handleSubmit(event) {
         event.preventDefault();
-
-        setErrorMessage("");
+        setError("");
         setSubmitting(true);
 
         try {
-            // Send login information to the authentication context.
-            await login({email: formData.email, password: formData.password});
-
-            // Navigate to the protected dashboard after successful login.
-            navigate("/dashboard");
-
-        } catch (error) {
-        // Display a backend error if one exists.
-            if (axios.isAxiosError(error)) {
-                setErrorMessage(
-                    error.response?.data?.message ||
-                    "Unable to log in. Please check your credentials."
-            );
-            } else {
-                setErrorMessage("Something went wrong. Please try again");
-            }
+            await login({ email, password });
+            navigate(location.state?.from?.pathname || "/webhooks", { replace: true });
+        } catch (requestError) {
+            setError(requestError.message);
         } finally {
             setSubmitting(false);
         }
-    };
+    }
 
     return (
         <main className="auth-page">
@@ -72,7 +39,7 @@ function Login() {
                     </p>
                 </div>
 
-                {errorMessage && <div className="alert error-alert">{errorMessage}</div>}
+                {error && <p className="auth-card__error" role="alert">{error}</p>}
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <div className="form-group">
@@ -80,11 +47,11 @@ function Login() {
 
                         <input
                             id="email"
-                            name="email"
                             type="email"
+                            autoComplete="email"
                             placeholder="you@example.com"
-                            value={formData.email}
-                            onChange={handleChange}
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
                             required
                         />
                     </div>
@@ -100,11 +67,11 @@ function Login() {
 
                         <input
                             id="password"
-                            name="password"
                             type="password"
+                            autoComplete="current-password"
                             placeholder="Enter your password"
-                            value={formData.password}
-                            onChange={handleChange}
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
                             required
                         />
                     </div>
@@ -126,5 +93,3 @@ function Login() {
         </main>
     );
 }
-
-export default Login;

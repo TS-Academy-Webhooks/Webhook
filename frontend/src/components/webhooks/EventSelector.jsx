@@ -26,8 +26,8 @@ export function EventSelector({ selected, onChange, error }) {
 
     return (
         <fieldset className="event-selector" aria-describedby={error ? errorId : undefined}>
+            <legend className="event-selector__legend">Events</legend>
             <div className="event-selector__header">
-                <legend className="event-selector__legend">Events</legend>
                 <button type="button" className="event-selector__select-all" onClick={toggleAll}>
                     {allSelected ? 'Clear all' : 'Select all'}
                 </button>
