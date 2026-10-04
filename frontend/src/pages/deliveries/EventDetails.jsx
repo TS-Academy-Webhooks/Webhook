@@ -1,38 +1,6 @@
-import { useParams, Link } from "react-router-dom";
-
-const mockEvents = {
-  evt_001: {
-    id: "evt_001",
-    eventType: "order.created",
-    webhookName: "Order Confirmation",
-    triggeredAt: "2026-09-27 14:32",
-    payload: `{
-  "event": "order.created",
-  "order_id": "ord_9231",
-  "customer": "John Doe",
-  "amount": 4500,
-  "currency": "NGN"
-}`,
-    relatedDeliveries: [
-      { id: "del_001", status: "success", timestamp: "2026-09-27 14:32" },
-    ],
-  },
-  evt_002: {
-    id: "evt_002",
-    eventType: "shipment.dispatched",
-    webhookName: "Shipment Update",
-    triggeredAt: "2026-09-27 13:10",
-    payload: `{
-  "event": "shipment.dispatched",
-  "shipment_id": "shp_5521",
-  "carrier": "DHL",
-  "tracking_number": "DHL123456789"
-}`,
-    relatedDeliveries: [
-      { id: "del_002", status: "failed", timestamp: "2026-09-27 13:10" },
-    ],
-  },
-};
+import { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { getEvent } from "../../services/deliveryService";
 
 function statusStyles(status) {
   switch (status) {
@@ -40,21 +8,65 @@ function statusStyles(status) {
       return "bg-primary/10 text-primary";
     case "failed":
       return "bg-destructive/10 text-destructive";
-    case "pending":
-      return "bg-muted text-muted-foreground";
     default:
       return "bg-muted text-muted-foreground";
   }
 }
 
+function formatDate(value) {
+  return value ? new Date(value).toLocaleString() : "—";
+}
+
+function formatPayload(payload) {
+  if (payload === undefined || payload === null) return "No payload";
+  return typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+}
+
 function EventDetails() {
   const { eventId } = useParams();
-  const event = mockEvents[eventId];
+  const navigate = useNavigate();
+  const [event, setEvent] = useState(null);
+  const [deliveries, setDeliveries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!event) {
+  useEffect(() => {
+    let cancelled = false;
+    getEvent(eventId)
+      .then((data) => {
+        if (cancelled) return;
+        setEvent(data.event);
+        setDeliveries(data.deliveries || []);
+        setError("");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        if (err.status === 401) {
+          navigate("/");
+          return;
+        }
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId, navigate]);
+
+  if (loading) {
     return (
       <div className="p-6 bg-background text-foreground min-h-screen">
-        <p>Event not found.</p>
+        <p className="text-muted-foreground">Loading event...</p>
+      </div>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <div className="p-6 bg-background text-foreground min-h-screen">
+        <p className="text-destructive">{error || "Event not found."}</p>
         <Link to="/deliveries" className="text-primary underline">
           Back to Deliveries
         </Link>
@@ -71,45 +83,82 @@ function EventDetails() {
         ← Back to Deliveries
       </Link>
 
-      <h1 className="text-2xl font-semibold mt-4 mb-1">{event.eventType}</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Webhook: {event.webhookName} • {event.triggeredAt}
-      </p>
+      <div className="mt-4 mb-6">
+        <h1 className="text-2xl font-semibold">{event.type}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{event.eventId}</p>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4 mb-4 space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Event Type</span>
+          <span>{event.type}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Triggered At</span>
+          <span>{formatDate(event.createdAt)}</span>
+        </div>
+        {event.shipment?.trackingNumber && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Tracking Number</span>
+            <span>{event.shipment.trackingNumber}</span>
+          </div>
+        )}
+      </div>
 
       <div className="rounded-lg border border-border bg-card p-4 mb-4">
         <h2 className="text-sm font-medium text-muted-foreground mb-2">
-          Event Payload
+          Payload
         </h2>
         <pre className="text-xs bg-muted/50 rounded p-3 overflow-x-auto text-left">
-          {event.payload}
+          {formatPayload(event.payload)}
         </pre>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          Related Deliveries
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <h2 className="text-sm font-medium text-muted-foreground p-4 pb-2">
+          Related deliveries
         </h2>
-        <div className="space-y-2">
-          {event.relatedDeliveries.map((delivery) => (
-            <Link
-              key={delivery.id}
-              to={`/deliveries/${delivery.id}`}
-              className="flex items-center justify-between px-3 py-2 rounded-md border border-border hover:bg-muted/30 text-sm"
-            >
-              <span>{delivery.id}</span>
-              <span
-                className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles(
-                  delivery.status
-                )}`}
+        <table className="w-full text-left text-sm">
+          <thead className="bg-muted/50 text-muted-foreground">
+            <tr>
+              <th className="px-4 py-2 font-medium">Webhook</th>
+              <th className="px-4 py-2 font-medium">Status</th>
+              <th className="px-4 py-2 font-medium">Attempts</th>
+              <th className="px-4 py-2 font-medium">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deliveries.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-4 text-center text-muted-foreground">
+                  No deliveries for this event.
+                </td>
+              </tr>
+            )}
+            {deliveries.map((d) => (
+              <tr
+                key={d.id}
+                onClick={() => navigate(`/deliveries/${d.id}`)}
+                className="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
               >
-                {delivery.status}
-              </span>
-              <span className="text-muted-foreground">
-                {delivery.timestamp}
-              </span>
-            </Link>
-          ))}
-        </div>
+                <td className="px-4 py-2">{d.webhook?.name ?? "—"}</td>
+                <td className="px-4 py-2">
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusStyles(
+                      d.status
+                    )}`}
+                  >
+                    {d.status}
+                  </span>
+                </td>
+                <td className="px-4 py-2">{d.attemptCount}</td>
+                <td className="px-4 py-2 text-muted-foreground">
+                  {formatDate(d.createdAt)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
