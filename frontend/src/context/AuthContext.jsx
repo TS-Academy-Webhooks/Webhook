@@ -1,5 +1,6 @@
 // src/context/AuthContext.jsx
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { AuthContext } from './auth-context';
 import {
     endSession,
     getCurrentUser,
@@ -8,8 +9,6 @@ import {
     register as registerRequest,
 } from '../services/authService';
 import { AUTH_TOKEN_KEY } from '../services/api';
-
-const AuthContext = createContext(undefined);
 
 function saveToken(token) {
     try {
@@ -64,7 +63,7 @@ export function AuthProvider({ children }) {
     const login = useCallback(async (credentials) => {
         const { token, user: loggedInUser } = await loginRequest(credentials);
         if (!token) throw new Error('Login response did not include a token.');
-        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        saveToken(token);
         setUser(loggedInUser);
         return loggedInUser;
     }, []);
@@ -85,13 +84,4 @@ export function AuthProvider({ children }) {
     const value = { user, isAuthenticated: Boolean(user), loading, login, register, logout };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components -- keep the existing auth context hook beside its provider.
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
 }

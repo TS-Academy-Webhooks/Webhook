@@ -4,8 +4,13 @@ export default function ForgotPassword() {
     return (
         <main className="auth-page">
             <section className="auth-card">
-                <h1>Password reset</h1>
-                <p>Password reset is not available yet. Contact your administrator for help.</p>
+                <div className="auth-header">
+                    <div className="brand-mark">W</div>
+                    <h1 className="auth-title">Password reset</h1>
+                    <p className="auth-description">
+                        Password reset is not available yet. Contact your administrator for help.
+                    </p>
+                </div>
                 <Link to="/login">Back to sign in</Link>
             </section>
         </main>
