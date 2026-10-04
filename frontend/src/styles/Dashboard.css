@@ -33,7 +33,7 @@
 }
 
 .page-description {
-  /* margin-top: var(--spacing-xs); */
+    margin-top: var(--spacing-xs);
     color: var(--muted-foreground);
 }
 
@@ -57,18 +57,25 @@
 }
 
 .stat-label {
-    /* display: block;
-    margin-bottom: 0.75rem; */
+    display: block;
+    margin-bottom: 0.75rem;
     color: var(--muted-foreground);
     font-size: 0.875rem;
-    }
+    font-weight: 500;
+}
 
 .stat-value {
-    /* display: block; */
+    display: block;
     margin-top: var(--spacing-sm);
 
     font-size: 1.75rem;
     font-weight: 700;
+}
+
+.stat-description {
+    color: var(--muted-foreground);
+
+    font-size: 0.75rem;
 }
 
 /* Dashboard sections */

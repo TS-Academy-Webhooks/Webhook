@@ -50,9 +50,9 @@ function DashboardLayout() {
           >
             Deliveries
           </Link>
-        </nav>
 
-        <div className="sidebar-bottom">
+
+        {/* <div className="sidebar-bottom"> */}
           <Link
             to="/settings"
             className="nav-link"
@@ -66,7 +66,7 @@ function DashboardLayout() {
           >
             Log out
           </button>
-        </div>
+        </nav>
       </aside>
 
       {/* Main application area */}
