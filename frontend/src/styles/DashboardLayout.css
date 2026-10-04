@@ -120,13 +120,23 @@
 }
 
 .logout-button {
+    width: 100%;
+
+    padding: 0.7rem 0.8rem;
+
     border: none;
+    border-radius: calc(var(--radius) - 0.125rem);
+
     background: transparent;
     color: var(--muted-foreground);
+
+    text-align: left;
+    font-size: 0.9rem;
 }
 
 .logout-button:hover {
-    color: var(--foreground);
+    background: var(--sidebar-accent);
+    color: var(--sidebar-foreground);
 }
 
 /* Page content */

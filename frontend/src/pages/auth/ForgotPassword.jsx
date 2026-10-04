@@ -20,7 +20,7 @@ function ForgotPassword() {
     setSubmitting(true);
 
     try {
-      await forgotPassword(email);
+      await forgotPassword({email});
 
       setMessage(
         "If an account exists with this email, password reset instructions have been sent."

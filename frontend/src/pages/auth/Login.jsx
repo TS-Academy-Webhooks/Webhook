@@ -39,7 +39,7 @@ function Login() {
 
         try {
             // Send login information to the authentication context.
-            await login(formData.email, formData.password);
+            await login({email: formData.email, password: formData.password});
 
             // Navigate to the protected dashboard after successful login.
             navigate("/dashboard");

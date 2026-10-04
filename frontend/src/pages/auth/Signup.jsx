@@ -47,11 +47,11 @@ function Signup() {
         setSubmitting(true);
 
         try {
-            await register(
-                formData.name,
-                formData.email,
-                formData.password
-            );
+            await register({
+                name: formData.name,
+                email: formData.email,
+                password: formData.password
+            });
 
             // Copied out await register({ name: name.trim(), email: email.trim(), password });
             navigate('/login'); //, { state: { justRegistered: true, email: email.trim() } });
@@ -125,7 +125,7 @@ function Signup() {
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            minLength={8}
+                            minLength={12}
                         />
                     </div>
 
