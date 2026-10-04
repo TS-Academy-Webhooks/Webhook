@@ -8,8 +8,8 @@ const AuthContext = createContext(undefined);
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     // Starts true: on first load we don't yet know if a stored token is
-    // valid. ProtectedRoute waits for this before deciding to bounce to
-    // /login, so a refresh on an authenticated page doesn't flash-redirect.
+    // valid. ProtectedRoute waits for this before redirecting an unauthenticated
+    // visitor away from protected pages.
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -56,6 +56,7 @@ export function AuthProvider({ children }) {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- keep the existing auth context hook beside its provider.
 export function useAuth() {
     const context = useContext(AuthContext);
     if (context === undefined) {

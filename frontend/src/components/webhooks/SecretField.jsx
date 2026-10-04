@@ -1,4 +1,5 @@
 // src/components/webhooks/SecretField.jsx
+import { useState } from 'react';
 import { Button } from '../common/Button';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import './SecretField.css';
@@ -10,6 +11,8 @@ import './SecretField.css';
  */
 export function SecretField({ value, oneTime = false }) {
     const [copied, copy] = useCopyToClipboard();
+    const [visible, setVisible] = useState(false);
+    const displayValue = oneTime && visible ? value : '•'.repeat(Math.min(value?.length ?? 16, 32));
 
     return (
         <div className="secret-field">
@@ -20,11 +23,12 @@ export function SecretField({ value, oneTime = false }) {
                 </p>
             )}
             <div className="secret-field__row">
-                <code className="secret-field__value">{value}</code>
+                <code className="secret-field__value">{displayValue}</code>
                 {oneTime && (
-                    <Button variant="secondary" onClick={() => copy(value)}>
-                        {copied ? 'Copied!' : 'Copy'}
-                    </Button>
+                    <>
+                        <Button variant="secondary" onClick={() => setVisible((shown) => !shown)}>{visible ? 'Hide' : 'Reveal'}</Button>
+                        <Button variant="secondary" onClick={() => copy(value)}>{copied ? 'Copied!' : 'Copy'}</Button>
+                    </>
                 )}
             </div>
         </div>

@@ -1,4 +1,8 @@
 export const WEBHOOK_EVENTS = [
+    { value: 'order.created', label: 'Order Created', description: 'Triggered when a new order is created.' },
+    { value: 'order.paid', label: 'Order Paid', description: 'Triggered when payment is confirmed.' },
+    { value: 'order.shipped', label: 'Order Shipped', description: 'Triggered when an order is shipped.' },
+    { value: 'order.cancelled', label: 'Order Cancelled', description: 'Triggered when an order is cancelled.' },
     { value: 'shipment.created', label: 'Shipment Created', description: 'Triggered when a new shipment is registered.' },
     { value: 'shipment.picked_up', label: 'Shipment Picked Up', description: 'Triggered when the courier picks up the shipment.' },
     { value: 'shipment.in_transit', label: 'Shipment In Transit', description: 'Triggered when the shipment is moving between hubs.' },

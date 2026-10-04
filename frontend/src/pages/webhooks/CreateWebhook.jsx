@@ -22,12 +22,12 @@ export default function CreateWebhook() {
             <div className="create-webhook-page__header">
                 <h1>Create Webhook</h1>
                 <p>
-                    Register an endpoint to receive shipment events. You'll get a signing
+                    Register an endpoint to receive order and shipment events. You'll get a signing
                     secret once the webhook is created — save it right away.
                 </p>
             </div>
 
-            <WebhookForm onSubmit={handleSubmit} onCancel={() => navigate(ROUTES.WEBHOOKS)} />
+            <WebhookForm onSubmit={handleSubmit} onCancel={() => navigate(ROUTES.WEBHOOK_ENDPOINTS)} />
         </div>
     );
 }

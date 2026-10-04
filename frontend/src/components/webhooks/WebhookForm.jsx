@@ -17,14 +17,16 @@ const DEMO_RECEIVER_URL = `${
  * @param {string} [submitLabel]
  */
 export function WebhookForm({
-                                initialValues = { name: '', url: '', events: [] },
+                                initialValues = { name: '', url: '', description: '', events: [], isActive: true },
                                 onSubmit,
                                 onCancel,
                                 submitLabel = 'Create Webhook',
                             }) {
     const [name, setName] = useState(initialValues.name);
     const [url, setUrl] = useState(initialValues.url);
+    const [description, setDescription] = useState(initialValues.description ?? '');
     const [events, setEvents] = useState(initialValues.events);
+    const [isActive, setIsActive] = useState(initialValues.isActive ?? true);
     const [fieldErrors, setFieldErrors] = useState({});
     const [formError, setFormError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -47,7 +49,7 @@ export function WebhookForm({
         setFormError(null);
         setSubmitting(true);
         try {
-            await onSubmit({ name: name.trim(), url: url.trim(), events });
+            await onSubmit({ name: name.trim(), url: url.trim(), description: description.trim(), events, isActive });
         } catch (err) {
             // err is expected to be the normalized shape from utils/apiError.js:
             // { message, fieldErrors }
@@ -94,7 +96,11 @@ export function WebhookForm({
                 </button>
             </div>
 
+            <Input label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What this endpoint is used for" />
+
             <EventSelector selected={events} onChange={setEvents} error={fieldErrors.events} />
+
+            <label className="webhook-form__active"><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Endpoint active</label>
 
             <div className="webhook-form__actions">
                 {onCancel && (

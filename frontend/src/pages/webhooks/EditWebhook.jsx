@@ -8,12 +8,14 @@ import { EmptyState } from '../../components/common/EmptyState.jsx';
 import { ROUTES } from '../../constants/routes.js';
 import './EditWebhook.css';
 
-// Only send fields that actually changed, per the backend's partial-update
-// contract (PUT /api/webhooks/:id accepts any subset of the body).
+// Only send fields that actually changed; the service maps UI fields to the
+// backend's PATCH contract.
 function diffPayload(original, next) {
     const diff = {};
     if (next.name !== original.name) diff.name = next.name;
     if (next.url !== original.url) diff.url = next.url;
+    if ((next.description ?? '') !== (original.description ?? '')) diff.description = next.description;
+    if (next.isActive !== original.isActive) diff.isActive = next.isActive;
 
     const sameEvents =
         original.events.length === next.events.length &&
@@ -36,7 +38,7 @@ export default function EditWebhook() {
                 title="Webhook not found"
                 description="It may have been deleted, or the link may be incorrect."
                 action={
-                    <Button as={Link} to={ROUTES.WEBHOOKS} variant="primary">
+                    <Button as={Link} to={ROUTES.WEBHOOK_ENDPOINTS} variant="primary">
                         Back to Webhooks
                     </Button>
                 }
@@ -73,7 +75,7 @@ export default function EditWebhook() {
             </div>
 
             <WebhookForm
-                initialValues={{ name: webhook.name, url: webhook.url, events: webhook.events }}
+                initialValues={{ name: webhook.name, url: webhook.url, description: webhook.description, isActive: webhook.isActive, events: webhook.events }}
                 onSubmit={handleSubmit}
                 onCancel={() => navigate(ROUTES.WEBHOOK_DETAILS(id))}
                 submitLabel="Save changes"

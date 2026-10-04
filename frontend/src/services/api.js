@@ -25,8 +25,8 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Global 401 handling: an expired/invalid token clears itself and sends
-// the user back to login, rather than every page having to check for this.
+// Global 401 handling clears expired/invalid tokens. The authentication owner
+// will connect their sign-in route separately.
 api.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -34,11 +34,7 @@ api.interceptors.response.use(
             localStorage.removeItem(AUTH_TOKEN_KEY);
             // Avoid an import cycle with react-router here; a hard redirect is
             // fine for a 401 since app state is invalid anyway.
-            // TODO: once the login page exists, uncomment this redirect. For now, just log the 401 so we can see it in the console.
-            console.warn('Unauthorized (401) response received. Redirecting to login.');
-            // if (window.location.pathname !== '/login') {
-            //     window.location.href = '/login';
-            // }
+            console.warn('Unauthorized (401) response received.');
         }
         return Promise.reject(error);
     }

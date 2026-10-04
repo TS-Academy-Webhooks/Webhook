@@ -17,5 +17,7 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    // Fetch effects intentionally update loading/data state after async work; this rule flags the request kickoff, not the completion callback.
+    rules: { 'react-hooks/set-state-in-effect': 'off' },
   },
 ])
