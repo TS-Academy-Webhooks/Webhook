@@ -37,7 +37,7 @@ async function run() {
     await mongoose.connect(MONGO_URI);
     console.log("Connected to MongoDB.");
 
-    const email = ADMIN_EMAIL.toLowerCase();
+    const email = ADMIN_EMAIL.trim().toLowerCase();
     const existing = await User.findOne({ email });
 
     if (existing) {
