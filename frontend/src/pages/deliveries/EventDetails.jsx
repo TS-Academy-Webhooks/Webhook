@@ -179,7 +179,7 @@ function EventDetails() {
                     <button
                       type="button"
                       disabled={retryingId === d.id}
-                      onClick={() => handleRetry(d.id)}
+                      onClick={(e) => { e.stopPropagation(); handleRetry(d.id); }}
                     >
                       {retryingId === d.id ? "Retrying…" : "Retry"}
                     </button>
