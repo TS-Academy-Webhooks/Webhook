@@ -1,16 +1,27 @@
-# React + Vite
+# Waybridge frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Waybridge is a responsive Vite + React Router application. It is developed as a separate package from Express, but the production backend serves `frontend/dist` and its `/api` endpoints from one origin.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+From the repository root, install dependencies once with `npm ci --prefix frontend` and `npm ci --prefix backend`. Copy `backend/.env.example` to `backend/.env` and configure MongoDB, JWT/admin secrets, and `CORS_ORIGIN=http://localhost:5173`. Start `npm run dev:api` and `npm run dev:frontend` in separate terminals.
 
-## React Compiler
+Vite proxies `/api` and `/api-docs` to Express on `http://localhost:3000`. The React app itself uses the relative `/api` path, so the browser and HttpOnly refresh cookie stay on the Vite origin in development. The public developer guide is `/docs`; Swagger UI is available on the API server at `/api-docs`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Routes and permissions
 
-## Expanding the ESLint configuration
+Public routes are `/`, `/about`, `/docs`, and `/track` (with `/track/:trackingNumber` for lookup results). Authenticated customers can see their assigned shipments, own webhooks, and own deliveries; administrator-only actions include shipment status changes, event browsing, and demo-receiver inspection/configuration. Unsupported API-key management and email-backed password recovery are explicitly unavailable.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Access tokens are kept in memory only. On initial load, the app rotates the HttpOnly refresh cookie through `POST /api/auth/refresh`; protected requests retry once after a 401 if session refresh succeeds. Logout revokes the server session and clears local in-memory auth. Do not persist access or refresh tokens in browser storage.
+
+## Build, prerendering, and SEO
+
+Run `npm run build` from the repository root (or `npm run build` in `frontend/`). Vite builds the client, then `scripts/prerender.mjs` renders the public landing, About, Docs, and Track pages to `dist/`. Set `VITE_SITE_URL` to the deployed HTTPS site origin before building to configure canonical URLs, social-card metadata, and the public sitemap. The build also writes `robots.txt`; private routes receive `noindex, nofollow` metadata and are omitted from the sitemap.
+
+The frontend build requires Node.js 20.19+ in the 20.x line, or 22.12+.
+
+Express serves prerendered files such as `/about/` and `/docs/` directly. Other client-side application routes fall back to the Vite shell after API, health, and Swagger routes. Keep `/api` unknown-route responses as JSON 404s; they must never be served the application shell.
+
+## Verification
+
+Run `npm run lint` and `npm run build` from the repository root. Backend API and static-serving tests run with `npm test`.

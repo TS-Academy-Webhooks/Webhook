@@ -1,14 +1,24 @@
 import api from "./api";
 import { parseApiError } from "../utils/apiError";
 
+let refreshPromise = null;
+
 function unwrapUser(data) {
-    return data.user ?? data;
+    return data?.user ?? data ?? null;
+}
+
+function sessionFrom(response) {
+    const payload = response?.data ?? {};
+    return {
+        token: payload.accessToken ?? payload.token ?? null,
+        user: payload.user ?? (payload.id || payload._id || payload.email ? payload : null),
+    };
 }
 
 export async function login({ email, password }) {
     try {
-        const { data } = await api.post("/auth/login", { email, password });
-        return { token: data.data.accessToken, user: unwrapUser(data.data) };
+        const { data } = await api.post("/auth/login", { email: email.trim(), password });
+        return sessionFrom(data);
     } catch (error) {
         throw parseApiError(error);
     }
@@ -16,8 +26,12 @@ export async function login({ email, password }) {
 
 export async function register({ name, email, password }) {
     try {
-        const { data } = await api.post("/auth/register", { name, email, password });
-        return { token: data.data.accessToken, user: unwrapUser(data.data) };
+        const { data } = await api.post("/auth/register", {
+            name: name.trim(),
+            email: email.trim(),
+            password,
+        });
+        return sessionFrom(data);
     } catch (error) {
         throw parseApiError(error);
     }
@@ -32,10 +46,30 @@ export async function getCurrentUser() {
     }
 }
 
-export async function refreshSession() {
+export function refreshSession() {
+    if (!refreshPromise) {
+        refreshPromise = (async () => {
+            try {
+                const { data } = await api.post("/auth/refresh");
+                return sessionFrom(data);
+            } catch (error) {
+                throw parseApiError(error);
+            }
+        })().finally(() => {
+            refreshPromise = null;
+        });
+    }
+
+    return refreshPromise;
+}
+
+export async function changePassword({ currentPassword, newPassword }) {
     try {
-        const { data } = await api.post("/auth/refresh");
-        return { token: data.data.accessToken, user: unwrapUser(data.data) };
+        const { data } = await api.post("/auth/change-password", {
+            currentPassword,
+            newPassword,
+        });
+        return data.data;
     } catch (error) {
         throw parseApiError(error);
     }

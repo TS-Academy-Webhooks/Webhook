@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { Input } from "../../components/common/Input";
+import { validateSignup } from "../../utils/validateSignup";
 
 export default function Signup() {
     const { register } = useAuth();
@@ -10,21 +12,40 @@ export default function Signup() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
+
+    function updateField(setter, field) {
+        return (event) => {
+            setter(event.target.value);
+            setFieldErrors((current) => ({ ...current, [field]: undefined }));
+            setError("");
+        };
+    }
+
+    function focusFirstError(errors) {
+        document.getElementById(Object.keys(errors)[0])?.focus();
+    }
 
     async function handleSubmit(event) {
         event.preventDefault();
         setError("");
-        if (password !== confirmPassword) {
-            setError("Passwords do not match.");
+        const validation = validateSignup({ name, email, password, confirmPassword });
+        if (Object.keys(validation).length > 0) {
+            setFieldErrors(validation);
+            focusFirstError(validation);
             return;
         }
+        setFieldErrors({});
         setSubmitting(true);
 
         try {
             await register({ name, email, password });
-            navigate("/webhooks", { replace: true });
+            navigate("/dashboard", { replace: true });
         } catch (requestError) {
+            const serverFieldErrors = requestError.fieldErrors ?? {};
+            setFieldErrors(serverFieldErrors);
+            if (Object.keys(serverFieldErrors).length > 0) focusFirstError(serverFieldErrors);
             setError(requestError.message);
         } finally {
             setSubmitting(false);
@@ -43,58 +64,63 @@ export default function Signup() {
                 </div>
                 {error && <p className="auth-card__error" role="alert">{error}</p>}
                 <form onSubmit={handleSubmit} className="auth-form">
+                    <Input
+                        id="name"
+                        label="Full name"
+                        name="name"
+                        type="text"
+                        autoComplete="name"
+                        maxLength={60}
+                        placeholder="Your full name…"
+                        value={name}
+                        onChange={updateField(setName, "name")}
+                        error={fieldErrors.name}
+                        required
+                    />
+                    <Input
+                        id="email"
+                        label="Email address"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        spellCheck={false}
+                        placeholder="name@example.com…"
+                        value={email}
+                        onChange={updateField(setEmail, "email")}
+                        error={fieldErrors.email}
+                        required
+                    />
                     <div className="form-group">
-                        <label htmlFor="name">Full name</label>
-                        <input
-                            id="name"
-                            type="text"
-                            autoComplete="name"
-                            placeholder="John Doe"
-                            value={name}
-                            onChange={(event) => setName(event.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="email">Email address</label>
-                        <input
-                            id="email"
-                            type="email"
-                            autoComplete="email"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
+                        <Input
                             id="password"
+                            label="Password"
+                            name="password"
                             type="password"
                             autoComplete="new-password"
-                            placeholder="Create a password"
                             minLength={12}
+                            placeholder="Create a password…"
                             value={password}
-                            onChange={(event) => setPassword(event.target.value)}
+                            onChange={updateField(setPassword, "password")}
+                            error={fieldErrors.password}
                             required
                         />
                         <small>Use at least 12 characters.</small>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="confirmPassword">Confirm password</label>
-                        <input
-                            id="confirmPassword"
-                            type="password"
-                            autoComplete="new-password"
-                            placeholder="Confirm your password"
-                            value={confirmPassword}
-                            onChange={(event) => setConfirmPassword(event.target.value)}
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="primary-button" disabled={submitting}>
-                        {submitting ? "Creating account..." : "Create account"}
+                    <Input
+                        id="confirmPassword"
+                        label="Confirm password"
+                        name="confirmPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        minLength={12}
+                        placeholder="Re-enter your password…"
+                        value={confirmPassword}
+                        onChange={updateField(setConfirmPassword, "confirmPassword")}
+                        error={fieldErrors.confirmPassword}
+                        required
+                    />
+                    <button type="submit" className="primary-button" disabled={submitting} aria-busy={submitting}>
+                        {submitting ? "Creating account…" : "Create account"}
                     </button>
                 </form>
                 <p className="auth-footer">

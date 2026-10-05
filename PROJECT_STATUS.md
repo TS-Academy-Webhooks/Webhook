@@ -1,38 +1,29 @@
-# Logistics Webhook Platform
+# Project Architecture
 
-## Team Update
+Waybridge is a single-origin Express + Vite application for shipment tracking and webhook delivery. `backend/` is the canonical API and production web server; `frontend/` is the React application. `backend-my-part/` is retired and is not a runtime dependency.
 
-The backend API is implemented with Node.js, Express, and MongoDB. It supports shipment management, shipment status history, event creation, webhook management and delivery, retries, delivery logs, public tracking, and customer/admin authentication.
+## Runtime model
 
-The automated backend suite currently passes 7 tests. The auth and ownership flows have also been exercised against MongoDB. The live development API is available locally at `http://localhost:3000` when the backend is running.
+- In development, Vite runs on port `5173` and proxies `/api` to Express on port `3000`.
+- In production, build the Vite app into `frontend/dist`; Express serves those assets and the API from one HTTPS origin.
+- MongoDB holds users, sessions, shipments, events, webhooks, deliveries, and delivery attempts. Backend startup applies the documented, idempotent legacy-field migration.
+- The backend serves the API contract and interactive Swagger UI; see [backend/README.md](backend/README.md).
 
-## Backend Progress
+## Product areas
 
-- Customers can register and manage only shipments assigned to their account.
-- Admin accounts are created from private environment configuration. Admins can manage all shipments, assign existing shipments to customers, update shipment statuses, and manage webhooks, events, and deliveries.
-- Authentication uses short-lived access tokens and rotating refresh tokens in HttpOnly cookies. Logout and password changes revoke sessions.
-- Shipment status transitions are validated and recorded in the shipment timeline.
-- Shipment events trigger signed webhook requests. Failed requests are recorded and retried, and admins can manually resend deliveries.
-- Public tracking returns a limited shipment view without customer or internal fields.
-- A demo webhook receiver is available during development and disabled in production by default.
+- Public: marketing, product documentation, and shipment tracking.
+- Customer: account access, own shipments, webhook endpoints, and delivery visibility.
+- Admin: shipment operations and assignment, platform events and delivery operations, and demo-receiver administration.
+- Shared: responsive dashboard/navigation, account appearance and profile settings, event and delivery history.
 
-## Frontend Handoff
+API-key management and provider-backed email verification/password recovery are deferred because their backend contracts and provider configuration do not exist. The interface must not simulate those operations as successful.
 
-- Register: `POST /api/auth/register` with `{ "name", "email", "password" }`. Registration always creates a customer account.
-- Login: `POST /api/auth/login` with `{ "email", "password" }`. The JSON response contains `data.accessToken`; the refresh token is set as an HttpOnly cookie.
-- Protected API calls send `Authorization: Bearer <accessToken>`.
-- Browser requests that set, refresh, or clear the refresh cookie must use `credentials: "include"` (or `withCredentials: true`) and the API must allow the frontend's exact CORS origin.
-- Keep the short-lived access token in memory rather than `localStorage`. Call `POST /api/auth/refresh` to rotate the refresh cookie and receive another access token. Call `POST /api/auth/logout` to revoke the session.
-- `GET /api/auth/me` returns the signed-in user's profile and role.
-- Customers can create shipments with `origin`, `destination`, and `amount`; the backend assigns the customer identity. Customers can list and view only their own shipments.
-- Shipment status changes and webhook/event/delivery administration are admin-only. Public tracking uses `GET /api/tracking/:trackingNumber` and does not require a token.
+## Security and data
 
-Full endpoint details and sample requests are in [backend/README.md](backend/README.md).
+Public registration creates customers only; admins are provisioned from private environment variables. The browser keeps short-lived access tokens in memory and uses an HttpOnly refresh cookie. Production must use HTTPS, strong non-example secrets, an exact configured origin, and safe webhook URL policy. Keep local webhook and demo-receiver options disabled in production unless intentionally required.
 
-## Before Production
+Back up MongoDB before a deployment that runs legacy migrations. The backend migration guide documents transformed fields and any sign-in/API compatibility impact. Never commit `.env` files or bootstrap credentials.
 
-- Rotate any database, JWT, or admin credentials that have been shared, and keep the replacements in a secret manager or deployment environment. Never commit `.env`.
-- Set `NODE_ENV=production`, a strong `JWT_SECRET`, dedicated bootstrap admin credentials, HTTPS, and the exact production `CORS_ORIGIN`.
-- Keep `ALLOW_LOCALHOST_WEBHOOKS` disabled and `ENABLE_DEMO_RECEIVER` disabled in production.
-- Add provider-backed email verification and password recovery before opening registration to the public. Multi-factor authentication is not implemented.
-- Run `npm test` from `backend` before merging or deploying.
+## Development references
+
+`davinci/` is the reference for the merged backend contract, compatibility behavior, migrations, and API docs. `chadman/` is the reference for full-platform screens and responsive UX; the production frontend remains Vite + React Router.

@@ -6,7 +6,7 @@ const { trackShipment } = require("../controllers/trackingController");
 
 router.get(
 	"/:trackingNumber",
-	param("trackingNumber").matches(/^TRK-\d{5}$/).withMessage("Invalid tracking number format"),
+	param("trackingNumber").trim().toUpperCase().matches(/^TRK-\d{5}$/).withMessage("Invalid tracking number format"),
 	validateRequest,
 	trackShipment
 );

@@ -15,10 +15,17 @@
 .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: .95rem; }
 .settings-row strong { font-size: .82rem; font-weight: 550; }
 .settings-row p { max-width: 34rem; }
-.settings-switch { position: relative; width: 2.35rem; min-height: 1.35rem !important; flex: 0 0 2.35rem; padding: .12rem !important; border: 0 !important; border-radius: 999px !important; background: var(--muted-foreground) !important; transition: background .18s ease; }
-.settings-switch span { display: block; width: 1.05rem; height: 1.05rem; border-radius: 50%; background: white; box-shadow: 0 1px 2px rgb(0 0 0 / .2); transition: transform .18s ease; }
-.settings-switch--on { background: var(--primary) !important; }
-.settings-switch--on span { transform: translateX(1rem); }
+.settings-switch { position: relative; width: 2.75rem; min-height: 2.75rem !important; flex: 0 0 2.75rem; padding: 0 !important; border: 0 !important; border-radius: .5rem !important; background: transparent !important; }
+.settings-switch::before { position: absolute; top: 50%; left: .25rem; width: 2.25rem; height: 1.35rem; transform: translateY(-50%); border-radius: 999px; background: var(--muted-foreground); transition: background-color .18s ease; content: ""; }
+.settings-switch span { position: absolute; top: 50%; left: .4375rem; width: 1.05rem; height: 1.05rem; transform: translateY(-50%); border-radius: 50%; background: white; box-shadow: 0 1px 2px rgb(0 0 0 / .2); transition: transform .18s ease; }
+.settings-switch--on::before { background: var(--primary); }
+.settings-switch--on span { transform: translate(1rem, -50%); }
 .settings-card--session { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .settings-card--session .settings-card__heading { padding: 0; border: 0; }
+.settings-password-form { display: grid; max-width: 34rem; gap: 1rem; padding-top: 1rem; }
+.settings-message { color: var(--primary); font-size: .82rem; }
+.settings-message--error { color: var(--destructive); }
+.settings-card--unavailable ul { display: grid; gap: .5rem; margin: 1rem 0 0; padding-left: 1.2rem; color: var(--muted-foreground); font-size: .8rem; line-height: 1.5; }
+.settings-card--unavailable a { color: var(--primary); }
+.settings-unavailable { display: grid; gap: .65rem; }
 @media (max-width: 600px) { .settings-card { padding: 1rem; } .settings-row { align-items: flex-start; } .settings-card--session { align-items: flex-start; flex-direction: column; } }

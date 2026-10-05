@@ -8,7 +8,7 @@ export default function ForgotPassword() {
                     <div className="brand-mark">W</div>
                     <h1 className="auth-title">Password reset</h1>
                     <p className="auth-description">
-                        Password reset is not available yet. Contact your administrator for help.
+                        Email-backed password recovery is unavailable because no recovery email provider is configured. Contact your Waybridge administrator to regain access.
                     </p>
                 </div>
                 <Link to="/login">Back to sign in</Link>

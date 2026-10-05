@@ -1,50 +1,133 @@
+const Delivery = require("../models/Delivery");
 const DeliveryAttempt = require("../models/DeliveryAttempt");
 const Event = require("../models/event");
 const Webhook = require("../models/webhook");
 const AppError = require("../utils/AppError");
-const { sendSuccess } = require("../utils/apiResponse");
-const { resendWebhookOnce } = require("../services/webhookDelivery");
+const { paginatedData, sendSuccess } = require("../utils/apiResponse");
+const { processDelivery } = require("../services/webhookDelivery");
 
-exports.getDelivery = async (req, res) => {
-  const delivery = await DeliveryAttempt.findById(req.params.id)
-    .populate("webhookId", "name url")
-    .populate("eventId", "eventId type payload");
-  if (!delivery) {
-    throw new AppError("Delivery attempt not found", 404);
+function ownerFilter(req) {
+  return req.user.role === "admin" ? {} : { ownerId: req.user._id };
+}
+
+async function findDeliveryForUser(req, id) {
+  const filter = ownerFilter(req);
+  const delivery = await Delivery.findOne({ _id: id, ...filter });
+  if (delivery) return { delivery };
+
+  const attempt = await DeliveryAttempt.findById(id);
+  if (!attempt) return null;
+
+  if (attempt.deliveryId) {
+    const parentDelivery = await Delivery.findOne({
+      _id: attempt.deliveryId,
+      ...filter,
+    });
+    return parentDelivery ? { delivery: parentDelivery, attempt } : null;
   }
 
-  return sendSuccess(res, "Delivery attempt retrieved successfully", delivery);
+  if (!attempt.webhookId) return null;
+  const webhook = await Webhook.findOne({
+    _id: attempt.webhookId,
+    ...filter,
+  });
+  if (!webhook) return null;
+  return { attempt };
+}
+
+async function getAttempts(deliveryId) {
+  return DeliveryAttempt.find({ deliveryId })
+    .sort({ attemptNumber: 1 })
+    .populate("webhookId", "name url")
+    .populate("eventId", "eventId type");
+}
+
+exports.getDelivery = async (req, res) => {
+  const result = await findDeliveryForUser(req, req.params.id);
+  if (!result) {
+    throw new AppError("Delivery not found", 404);
+  }
+
+  if (!result.delivery) {
+    const attempt = result.attempt.toObject({ virtuals: true });
+    return sendSuccess(res, "Delivery attempt retrieved successfully", {
+      ...attempt,
+      delivery: null,
+      attempts: [attempt],
+    });
+  }
+
+  const delivery = await Delivery.findById(result.delivery._id)
+    .populate("webhookId", "name url")
+    .populate("eventId", "eventId type payload createdAt");
+  const data = delivery.toObject({ virtuals: true });
+  data.attempts = await getAttempts(delivery._id);
+  return sendSuccess(res, "Delivery retrieved successfully", data);
 };
 
 exports.resendDelivery = async (req, res) => {
-  const previousAttempt = await DeliveryAttempt.findById(req.params.id);
-  if (!previousAttempt) {
-    throw new AppError("Delivery attempt not found", 404);
+  const result = await findDeliveryForUser(req, req.params.id);
+  if (!result) {
+    throw new AppError("Delivery not found", 404);
   }
 
-  const [webhook, event] = await Promise.all([
-    Webhook.findById(previousAttempt.webhookId).select("+secret"),
-    Event.findById(previousAttempt.eventId),
-  ]);
-  if (!webhook) {
-    throw new AppError("Webhook no longer exists", 404);
-  }
-  if (!event) {
-    throw new AppError("Event not found", 404);
+  let delivery = result.delivery;
+  if (!delivery) {
+    const sourceAttempt = result.attempt;
+    const [webhook, event] = await Promise.all([
+      Webhook.findOne({
+        _id: sourceAttempt.webhookId,
+        ...ownerFilter(req),
+      }),
+      Event.findById(sourceAttempt.eventId),
+    ]);
+    if (!webhook) {
+      throw new AppError("Webhook no longer exists", 404);
+    }
+    if (!event) {
+      throw new AppError("Event not found", 404);
+    }
+
+    const previousAttempts = await DeliveryAttempt.countDocuments({
+      webhookId: webhook._id,
+      eventId: event._id,
+    });
+    delivery = await Delivery.create({
+      webhookId: webhook._id,
+      eventId: event._id,
+      ownerId: webhook.ownerId,
+      status: "failed",
+      attemptCount: previousAttempts,
+      maxAttempts: previousAttempts + 1,
+    });
   }
 
-  const attemptNumber = await DeliveryAttempt.countDocuments({
-    webhookId: webhook._id,
-    eventId: event._id,
-  }) + 1;
-  const attempt = await resendWebhookOnce(webhook, event, attemptNumber);
-  return sendSuccess(res, "Webhook resent successfully", attempt);
+  if (delivery.status === "pending") {
+    throw new AppError("Delivery is already in progress", 409);
+  }
+  if (delivery.status === "success") {
+    delivery = await Delivery.create({
+      webhookId: delivery.webhookId,
+      eventId: delivery.eventId,
+      ownerId: delivery.ownerId,
+    });
+  } else {
+    delivery.maxAttempts = delivery.attemptCount + 1;
+    delivery.status = "pending";
+    await delivery.save();
+  }
+
+  void processDelivery(delivery._id).catch((error) => {
+    console.error(`Resend of delivery ${delivery._id} crashed:`, error.message);
+  });
+
+  return sendSuccess(res, "Delivery queued for resend", delivery, 202);
 };
 
 exports.getDeliveries = async (req, res) => {
   const page = Number(req.query.page || 1);
-  const limit = Number(req.query.limit || 20);
-  const filter = {};
+  const limit = Number(req.query.limit || 10);
+  const filter = ownerFilter(req);
   if (req.query.status) {
     filter.status = req.query.status;
   }
@@ -54,18 +137,30 @@ exports.getDeliveries = async (req, res) => {
   if (req.query.eventId) {
     filter.eventId = req.query.eventId;
   }
-  const [deliveries, totalItems] = await Promise.all([
-    DeliveryAttempt.find(filter)
+  if (req.query.from || req.query.to) {
+    filter.createdAt = {};
+    if (req.query.from) filter.createdAt.$gte = new Date(req.query.from);
+    if (req.query.to) filter.createdAt.$lte = new Date(req.query.to);
+    if (filter.createdAt.$gte && filter.createdAt.$lte &&
+        filter.createdAt.$gte > filter.createdAt.$lte) {
+      throw new AppError("The from date must be earlier than the to date", 400);
+    }
+  }
+
+  const [deliveries, total] = await Promise.all([
+    Delivery.find(filter)
       .populate("webhookId", "name url")
       .populate("eventId", "eventId type")
-      .sort({ attemptedAt: -1 })
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit),
-    DeliveryAttempt.countDocuments(filter),
+    Delivery.countDocuments(filter),
   ]);
+  const items = deliveries.map((delivery) => delivery.toObject({ virtuals: true }));
 
-  return sendSuccess(res, "Deliveries retrieved successfully", {
-    deliveries,
-    pagination: { page, limit, totalItems, totalPages: Math.ceil(totalItems / limit) },
-  });
+  return sendSuccess(
+    res,
+    "Deliveries retrieved successfully",
+    paginatedData(items, page, limit, total, "deliveries")
+  );
 };

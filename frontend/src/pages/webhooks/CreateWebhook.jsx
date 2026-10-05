@@ -22,8 +22,7 @@ export default function CreateWebhook() {
             <div className="create-webhook-page__header">
                 <h1>Create Webhook</h1>
                 <p>
-                    Register an endpoint to receive order and shipment events. You'll get a signing
-                    secret once the webhook is created — save it right away.
+                    Register an endpoint to receive supported shipment events. Your signing secret is shown once after creation, so store it securely.
                 </p>
             </div>
 

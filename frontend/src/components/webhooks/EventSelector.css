@@ -58,3 +58,5 @@
     color: var(--destructive);
     margin: 0.75rem 0 0;
 }
+
+.event-selector:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }

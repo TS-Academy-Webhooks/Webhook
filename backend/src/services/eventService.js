@@ -2,7 +2,7 @@ const { randomInt } = require("crypto");
 const Event = require("../models/event");
 const deliverEvent = require("./webhookDelivery");
 
-async function createShipmentEvent(shipment) {
+async function createShipmentEvent(shipment, note) {
   const type = `shipment.${shipment.status}`;
   const timestamp = new Date();
   const eventId = `evt_${randomInt(100000, 1000000)}`;
@@ -11,6 +11,7 @@ async function createShipmentEvent(shipment) {
     eventId,
     shipmentId: shipment.trackingNumber,
     status: shipment.status,
+    ...(note ? { note } : {}),
     timestamp: timestamp.toISOString(),
   };
 

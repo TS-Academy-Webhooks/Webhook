@@ -2,10 +2,9 @@ require("dotenv").config();
 
 const app = require("./src/app");
 const connectDB = require("./src/config/db");
-const {
-  assignLegacyUsersCustomerRole,
-  bootstrapAdminAccount,
-} = require("./src/services/authService");
+const { bootstrapAdminAccount } = require("./src/services/authService");
+const User = require("./src/models/User");
+const migrateLegacyData = require("./src/services/legacyDataMigration");
 
 const PORT = process.env.PORT || 3000;
 
@@ -19,8 +18,20 @@ async function startServer() {
       throw new Error("Set CORS_ORIGIN to the production frontend origin before starting in production.");
     }
     await connectDB();
-    await assignLegacyUsersCustomerRole();
+    const migratedUsers = await migrateLegacyData.migrateLegacyUsers();
     await bootstrapAdminAccount();
+    const admin = await User.findOne({
+      email: (process.env.ADMIN_EMAIL || "").trim().toLowerCase(),
+      role: "admin",
+    });
+    if (!admin) {
+      throw new Error("Bootstrap admin account could not be loaded.");
+    }
+    const migration = await migrateLegacyData(admin._id, { skipUsers: true });
+    migration.users = migratedUsers;
+    if (Object.values(migration).some((count) => count > 0)) {
+      console.log("Migrated legacy backend records:", migration);
+    }
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });

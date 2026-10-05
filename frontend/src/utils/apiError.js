@@ -12,15 +12,16 @@ export function parseApiError(error) {
     const response = error?.response?.data;
 
     if (!response) {
-        // Network failure, timeout, CORS, server unreachable, etc.
         return {
-            message: 'Unable to reach the server. Check your connection and try again.',
-            fieldErrors: {},
-            status: null,
+            message: error?.isAxiosError && !error.response
+                ? 'Unable to reach the server. Check your connection and try again.'
+                : error?.message || 'Unable to reach the server. Check your connection and try again.',
+            fieldErrors: error?.fieldErrors ?? {},
+            status: error?.status ?? null,
         };
     }
 
-    const fieldErrors = {};
+    const fieldErrors = { ...(error?.fieldErrors ?? {}) };
     if (Array.isArray(response.errors)) {
         response.errors.forEach(({ field, message }) => {
             if (field) fieldErrors[field] = message;

@@ -1,6 +1,6 @@
 // src/pages/webhooks/Webhooks.jsx
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useWebhooks } from '../../hooks/useWebhooks';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { WebhookTable } from '../../components/webhooks/WebhookTable';
@@ -22,7 +22,12 @@ const STATUS_FILTERS = [
 ];
 
 export default function WebhookEndpoints() {
-    const [searchInput, setSearchInput] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const urlPage = Math.max(1, Number(searchParams.get('page')) || 1);
+    const urlSearch = searchParams.get('search') ?? '';
+    const activeValue = searchParams.get('active');
+    const urlActive = activeValue === 'true' ? true : activeValue === 'false' ? false : undefined;
+    const [searchInput, setSearchInput] = useState(urlSearch);
     const debouncedSearch = useDebouncedValue(searchInput, 300);
     const [webhookPendingDelete, setWebhookPendingDelete] = useState(null);
     const [deliveryCounts, setDeliveryCounts] = useState({ success: null, failed: null });
@@ -38,12 +43,39 @@ export default function WebhookEndpoints() {
         refetch,
         toggle,
         remove,
-    } = useWebhooks({ page: 1, limit: 10, search: '', active: undefined });
+    } = useWebhooks({ page: urlPage, limit: 10, search: urlSearch, active: urlActive });
 
-    // Keep the debounced search value in sync with the hook's params,
-    // resetting to page 1 whenever the search term actually changes.
     useEffect(() => {
-        setParams({ search: debouncedSearch, page: 1 });
+        setSearchInput(urlSearch);
+    }, [urlSearch]);
+
+    useEffect(() => {
+        if (
+            params.page !== urlPage ||
+            params.search !== urlSearch ||
+            params.active !== urlActive
+        ) {
+            setParams({ page: urlPage, search: urlSearch, active: urlActive });
+        }
+    }, [params.active, params.page, params.search, setParams, urlActive, urlPage, urlSearch]);
+
+    function updateParams(patch, { replace = false } = {}) {
+        setParams(patch);
+        const next = new URLSearchParams(searchParams);
+        for (const [key, value] of Object.entries(patch)) {
+            if (value === undefined || value === '') next.delete(key);
+            else next.set(key, String(value));
+        }
+        if (Object.keys(patch).some((key) => key !== 'page')) next.delete('page');
+        setSearchParams(next, { replace });
+    }
+
+    useEffect(() => {
+        const nextSearch = debouncedSearch.trim();
+        if (nextSearch !== params.search) {
+            updateParams({ search: nextSearch, page: 1 }, { replace: true });
+        }
+        // updateParams depends on the current URL query string; the input is intentionally debounced.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedSearch]);
 
@@ -63,7 +95,7 @@ export default function WebhookEndpoints() {
     const subscribedEventCount = useMemo(() => webhooks.reduce((sum, webhook) => sum + (webhook.events?.length ?? 0), 0), [webhooks]);
 
     const handleStatusFilter = (active) => {
-        setParams({ active, page: 1 });
+        updateParams({ active, page: 1 });
     };
 
     const isEmpty = !loading && !error && webhooks.length === 0 && !params.search && params.active === undefined;
@@ -83,14 +115,13 @@ export default function WebhookEndpoints() {
                 <StatCard label="Failed deliveries" value={deliveryCounts.failed} loading={deliveryCounts.failed === null} />
             </div>
 
-            {webhooks.some((webhook) => webhook.isDemo) && <p className="feature-page__demo-note">Demo endpoints and changes are stored in browser memory for this session. Connect the endpoint API to persist them.</p>}
-
             {!isEmpty && (
                 <div className="webhooks-page__toolbar">
                     <Input
                         value={searchInput}
+                        maxLength={100}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        placeholder="Search by name..."
+                        placeholder="Search by name…"
                         aria-label="Search webhooks"
                     />
                     <div className="webhooks-page__filters" role="group" aria-label="Filter by status">
@@ -101,6 +132,7 @@ export default function WebhookEndpoints() {
                                 className={`webhooks-page__filter-chip ${
                                     params.active === filter.value ? 'webhooks-page__filter-chip--active' : ''
                                 }`}
+                                aria-pressed={params.active === filter.value}
                                 onClick={() => handleStatusFilter(filter.value)}
                             >
                                 {filter.label}
@@ -148,7 +180,7 @@ export default function WebhookEndpoints() {
                         onToggle={toggle}
                         onDeleteRequest={setWebhookPendingDelete}
                     />
-                    <Pagination pagination={pagination} onPageChange={(page) => setParams({ page })} />
+                    <Pagination pagination={pagination} onPageChange={(page) => updateParams({ page })} />
                 </>
             )}
 

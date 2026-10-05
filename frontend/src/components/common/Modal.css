@@ -7,7 +7,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    overscroll-behavior: contain;
     z-index: 50;
 }
 
@@ -18,14 +19,13 @@
     border: 1px solid var(--border);
     width: 100%;
     max-width: 28rem;
-    max-height: 90vh;
+    max-height: min(90vh, 90dvh);
     overflow-y: auto;
+    overscroll-behavior: contain;
     box-shadow: 0 10px 30px color-mix(in oklab, black 25%, transparent);
 }
 
-.modal__dialog:focus-visible {
-    outline: none;
-}
+.modal__dialog:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 
 .modal__header {
     display: flex;

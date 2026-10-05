@@ -1,5 +1,5 @@
 // src/components/common/Modal.jsx
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import './Modal.css';
 
@@ -15,6 +15,7 @@ const FOCUSABLE_SELECTOR =
 export function Modal({ isOpen, onClose, title, children }) {
     const dialogRef = useRef(null);
     const previouslyFocusedRef = useRef(null);
+    const titleId = useId();
 
     // Open/close lifecycle: remember what was focused, move focus into the
     // dialog, and restore focus to the trigger element on close.
@@ -22,12 +23,15 @@ export function Modal({ isOpen, onClose, title, children }) {
         if (!isOpen) return;
 
         previouslyFocusedRef.current = document.activeElement;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
 
         const dialog = dialogRef.current;
         const firstFocusable = dialog?.querySelector(FOCUSABLE_SELECTOR);
         (firstFocusable || dialog)?.focus();
 
         return () => {
+            document.body.style.overflow = previousOverflow;
             previouslyFocusedRef.current?.focus?.();
         };
     }, [isOpen]);
@@ -68,17 +72,17 @@ export function Modal({ isOpen, onClose, title, children }) {
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="modal__backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="modal__backdrop">
             <div
                 ref={dialogRef}
                 className="modal__dialog"
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="modal-title"
+                aria-labelledby={titleId}
                 tabIndex={-1}
             >
                 <div className="modal__header">
-                    <h2 id="modal-title" className="modal__title">
+                    <h2 id={titleId} className="modal__title">
                         {title}
                     </h2>
                     <button type="button" className="modal__close" onClick={onClose} aria-label="Close">

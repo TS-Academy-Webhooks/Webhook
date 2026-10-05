@@ -31,6 +31,7 @@ export function SecretField({ value, oneTime = false }) {
                     </>
                 )}
             </div>
+            {copied && <span className="sr-only" role="status" aria-live="polite">Signing secret copied.</span>}
         </div>
     );
 }

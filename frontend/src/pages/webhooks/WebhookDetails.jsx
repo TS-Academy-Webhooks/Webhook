@@ -1,24 +1,21 @@
-// src/pages/webhooks/WebhookDetails.jsx
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useWebhook } from '../../hooks/useWebhook';
-import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
-import { Badge } from '../../components/common/Badge';
-import { Button } from '../../components/common/Button';
-import { Loader } from '../../components/common/Loader';
-import { EmptyState } from '../../components/common/EmptyState';
-import { WebhookStatus } from '../../components/webhooks/WebhookStatus';
-import { SecretField } from '../../components/webhooks/SecretField';
-import { DeleteWebhookModal } from '../../components/webhooks/DeleteWebhookModal';
-import { WebhookDeliveryPanel } from '../../components/webhooks/WebhookDeliveryPanel';
-import { formatEventType } from '../../utils/formatEventType';
-import { formatDate } from '../../utils/formatDate';
-import { ROUTES } from '../../constants/routes';
-import { Modal } from '../../components/common/Modal';
-import { testWebhook, regenerateWebhookSecret } from '../../services/webhookService';
-import { WEBHOOK_EVENT_VALUES } from '../../constants/webhookEvents';
-import { MOCK_ORDER_EVENT_TYPES } from '../../data/webhookEvents';
-import './WebhookDetails.css';
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useWebhook } from "../../hooks/useWebhook";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+import { Badge } from "../../components/common/Badge";
+import { Button } from "../../components/common/Button";
+import { Loader } from "../../components/common/Loader";
+import { EmptyState } from "../../components/common/EmptyState";
+import { WebhookStatus } from "../../components/webhooks/WebhookStatus";
+import { SecretField } from "../../components/webhooks/SecretField";
+import { DeleteWebhookModal } from "../../components/webhooks/DeleteWebhookModal";
+import { WebhookDeliveryPanel } from "../../components/webhooks/WebhookDeliveryPanel";
+import { formatEventType } from "../../utils/formatEventType";
+import { formatDate } from "../../utils/formatDate";
+import { ROUTES } from "../../constants/routes";
+import { Modal } from "../../components/common/Modal";
+import { regenerateWebhookSecret, testWebhook } from "../../services/webhookService";
+import "./WebhookDetails.css";
 
 export default function WebhookDetails() {
     const { id } = useParams();
@@ -28,152 +25,162 @@ export default function WebhookDetails() {
     const [copiedUrl, copyUrl] = useCopyToClipboard();
     const [confirmingDelete, setConfirmingDelete] = useState(false);
     const [testDialog, setTestDialog] = useState(false);
-    const [testEvent, setTestEvent] = useState('order.shipped');
     const [testing, setTesting] = useState(false);
     const [regenerateDialog, setRegenerateDialog] = useState(false);
     const [regenerating, setRegenerating] = useState(false);
-    const [rotatedSecret, setRotatedSecret] = useState('');
-    const [notice, setNotice] = useState('');
-
-    // Present only right after creation (Create Webhook navigates here with
-    // this in router state). Captured once, on the very first render, so it
-    // survives this component's own re-renders without re-reading history.
-    const [newSecret] = useState(() => location.state?.newSecret);
+    const [rotatedSecret, setRotatedSecret] = useState("");
+    const [notice, setNotice] = useState("");
+    const [noticeIsError, setNoticeIsError] = useState(false);
+    const [newSecret] = useState(() => location.state?.newSecret ?? "");
     const secretToReveal = rotatedSecret || newSecret;
-    const endpointEvents = [...new Set([...MOCK_ORDER_EVENT_TYPES, ...WEBHOOK_EVENT_VALUES])];
 
-    const runTest = async () => {
-        setTesting(true); setNotice('Sending test event…');
-        try { const result = await testWebhook(webhook.id, testEvent); setNotice(`${result.message} HTTP ${result.httpStatus} · ${result.duration}ms.`); }
-        catch (err) { setNotice(err.message); }
-        finally { setTesting(false); setTestDialog(false); }
-    };
-
-    const runRegenerate = async () => {
-        setRegenerating(true); setNotice('');
-        try { const result = await regenerateWebhookSecret(webhook.id); setRotatedSecret(result.secret); setNotice('Demo secret regenerated. Copy it now; it will not be available after leaving this page.'); }
-        catch (err) { setNotice(err.message); }
-        finally { setRegenerating(false); setRegenerateDialog(false); }
-    };
-
-    // Browsers persist `history.state` across a page reload, so leaving the
-    // secret in router state would let it — and the Copy button that exposes
-    // it — keep resurfacing on every refresh of this URL. Scrub it from
-    // history immediately after capturing it above, so a reload can never
-    // see it again; the API does not return saved secrets on later reads.
     useEffect(() => {
         if (location.state?.newSecret) {
             navigate(location.pathname, { replace: true, state: null });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [location.pathname, location.state?.newSecret, navigate]);
 
-    if (loading) return <Loader />;
-
+    if (loading) return <Loader label="Loading webhook" showLabel />;
     if (notFound) {
         return (
             <EmptyState
                 title="Webhook not found"
-                description="It may have been deleted, or the link may be incorrect."
-                action={
-                    <Button as={Link} to={ROUTES.WEBHOOK_ENDPOINTS} variant="primary">
-                        Back to Webhooks
-                    </Button>
-                }
+                description="It may have been deleted, or you may not have permission to view it."
+                action={<Button as={Link} to={ROUTES.WEBHOOK_ENDPOINTS}>Back to webhooks</Button>}
             />
         );
     }
-
     if (error) {
         return (
             <div className="webhook-details__error" role="alert">
                 <p>{error}</p>
-                <Button as={Link} to={ROUTES.WEBHOOK_ENDPOINTS} variant="ghost">
-                    Back to Webhooks
-                </Button>
+                <Button as={Link} to={ROUTES.WEBHOOK_ENDPOINTS} variant="ghost">Back to webhooks</Button>
             </div>
         );
     }
-
     if (!webhook) return null;
 
-    const handleDeleteConfirmed = async (webhookId) => {
+    async function runTest() {
+        setTesting(true);
+        setNotice("");
+        setNoticeIsError(false);
+        try {
+            await testWebhook(webhook.id);
+            setNotice("Test event queued. Review its delivery summary on the Deliveries page.");
+            setTestDialog(false);
+        } catch (requestError) {
+            setNotice(requestError.message);
+            setNoticeIsError(true);
+        } finally {
+            setTesting(false);
+        }
+    }
+
+    async function runRegenerate() {
+        setRegenerating(true);
+        setNotice("");
+        setNoticeIsError(false);
+        try {
+            const result = await regenerateWebhookSecret(webhook.id);
+            if (!result.secret) throw new Error("The server did not return the regenerated secret. Check the webhook before trying again.");
+            setRotatedSecret(result.secret);
+            setNotice("Signing secret regenerated. Copy and store it now; it will not be available again after leaving this page.");
+            setRegenerateDialog(false);
+        } catch (requestError) {
+            setNotice(requestError.message);
+            setNoticeIsError(true);
+        } finally {
+            setRegenerating(false);
+        }
+    }
+
+    async function handleToggle(next) {
+        setNotice("");
+        setNoticeIsError(false);
+        try {
+            await toggle(next);
+        } catch (requestError) {
+            setNotice(requestError.message);
+            setNoticeIsError(true);
+        }
+    }
+
+    async function handleDeleteConfirmed(webhookId) {
         await remove(webhookId);
         navigate(ROUTES.WEBHOOK_ENDPOINTS);
-    };
+    }
 
     return (
         <div className="webhook-details">
-            <div className="webhook-details__header">
-                <div>
+            <header className="webhook-details__header">
+                <div className="webhook-details__identity">
+                    <p><Link to={ROUTES.WEBHOOK_ENDPOINTS}>Webhooks</Link></p>
                     <h1>{webhook.name}</h1>
+                    <p className="webhook-details__url-text">{webhook.url}</p>
                     <WebhookStatus
                         isActive={webhook.isActive}
                         webhookName={webhook.name}
-                        onToggle={(next) => toggle(next)}
+                        onToggle={handleToggle}
                     />
                 </div>
                 <div className="webhook-details__actions">
-                    <Button variant="secondary" onClick={() => setTestDialog(true)}>Test webhook</Button>
-                    <Button as={Link} to={ROUTES.DELIVERIES_FOR_WEBHOOK(webhook.id)} variant="ghost">
-                        View delivery logs
-                    </Button>
-                    <Button as={Link} to={ROUTES.WEBHOOK_EDIT(webhook.id)} variant="secondary">
-                        Edit
-                    </Button>
-                    <Button variant="destructive" onClick={() => setConfirmingDelete(true)}>
-                        Delete
-                    </Button>
+                    <Button variant="secondary" onClick={() => setTestDialog(true)} disabled={!webhook.isActive}>Send test</Button>
+                    <Button as={Link} to={ROUTES.DELIVERIES_FOR_WEBHOOK(webhook.id)} variant="ghost">View history</Button>
+                    <Button as={Link} to={ROUTES.WEBHOOK_EDIT(webhook.id)} variant="secondary">Edit</Button>
+                    <Button variant="destructive" onClick={() => setConfirmingDelete(true)}>Delete</Button>
                 </div>
-            </div>
+            </header>
+
+            {notice && (
+                <p className={noticeIsError ? "feature-page__error" : "feature-page__notice"} role={noticeIsError ? "alert" : "status"} aria-live={noticeIsError ? undefined : "polite"}>
+                    {notice}
+                </p>
+            )}
 
             <section className="webhook-details__card">
                 <h2>Endpoint URL</h2>
                 <div className="webhook-details__url-row">
                     <code className="webhook-details__url">{webhook.url}</code>
-                    <Button variant="secondary" onClick={() => copyUrl(webhook.url)}>
-                        {copiedUrl ? 'Copied!' : 'Copy'}
-                    </Button>
+                    <Button variant="secondary" onClick={() => copyUrl(webhook.url)}>{copiedUrl ? "Copied!" : "Copy URL"}</Button>
                 </div>
+                {copiedUrl && <span className="sr-only" role="status" aria-live="polite">Webhook URL copied.</span>}
             </section>
-
-            {webhook.isDemo && <p className="feature-page__demo-note">This is a demo endpoint. Changes are held in memory and will reset when the app reloads.</p>}
 
             <section className="webhook-details__card">
                 <h2>Subscribed events</h2>
                 <div className="webhook-details__events">
                     {webhook.events.map((event) => (
-                        <Badge key={event} variant="neutral">
-                            {formatEventType(event)}
-                        </Badge>
+                        <Badge key={event} variant="neutral">{formatEventType(event)}</Badge>
                     ))}
+                    {!webhook.events.length && <p className="webhook-details__hint">No events are subscribed.</p>}
                 </div>
             </section>
 
             <section className="webhook-details__card">
                 <h2>Signing secret</h2>
                 <p className="webhook-details__hint">
-                    Used to verify that a delivery genuinely came from this platform — your
-                    receiving server checks it against the <code>X-Webhook-Signature</code> header.
+                    Verify requests with the <code>X-Webhook-Signature</code> header and this endpoint’s secret.
+                    Secrets are masked on reads and shown in full only when created or regenerated.
                 </p>
-                <SecretField value={secretToReveal ?? '••••••••••••••••'} oneTime={Boolean(secretToReveal)} />
-                {!secretToReveal && <p className="webhook-details__hint">The endpoint secret is stored securely and cannot be retrieved again. It is shown only when first created or regenerated.</p>}
-                <div className="webhook-details__secret-actions"><Button variant="ghost" disabled={!webhook.isDemo} onClick={() => setRegenerateDialog(true)}>Regenerate secret</Button>{!webhook.isDemo && <span className="webhook-details__hint">Secret rotation is not supported by the connected API.</span>}</div>
+                <SecretField value={secretToReveal || webhook.secret || "••••••••••••••••"} oneTime={Boolean(secretToReveal)} />
+                {!secretToReveal && (
+                    <div className="webhook-details__secret-actions">
+                        <p className="webhook-details__hint">The existing secret cannot be retrieved.</p>
+                        <Button variant="secondary" onClick={() => setRegenerateDialog(true)}>Regenerate secret</Button>
+                    </div>
+                )}
+                {secretToReveal && (
+                    <div className="webhook-details__secret-actions">
+                        <Button variant="secondary" onClick={() => setRegenerateDialog(true)}>Regenerate again</Button>
+                    </div>
+                )}
             </section>
-
-            {notice && <p className="feature-page__notice" role="status">{notice}</p>}
 
             <WebhookDeliveryPanel webhookId={webhook.id} />
 
             <section className="webhook-details__card webhook-details__meta">
-                <div>
-                    <h2>Created</h2>
-                    <p>{formatDate(webhook.createdAt)}</p>
-                </div>
-                <div>
-                    <h2>Last updated</h2>
-                    <p>{formatDate(webhook.updatedAt)}</p>
-                </div>
+                <div><h2>Created</h2><p>{formatDate(webhook.createdAt, { withTime: true })}</p></div>
+                <div><h2>Last updated</h2><p>{formatDate(webhook.updatedAt, { withTime: true })}</p></div>
             </section>
 
             <DeleteWebhookModal
@@ -181,11 +188,21 @@ export default function WebhookDetails() {
                 onClose={() => setConfirmingDelete(false)}
                 onConfirm={handleDeleteConfirmed}
             />
-            <Modal isOpen={testDialog} onClose={() => !testing && setTestDialog(false)} title="Send a test webhook">
-                <div className="feature-page__form"><p className="feature-page__muted">Choose an event type for a simulated test. The current backend does not provide a test-delivery route.</p><label>Event type<select value={testEvent} onChange={(event) => setTestEvent(event.target.value)}>{endpointEvents.map((event) => <option key={event} value={event}>{formatEventType(event)}</option>)}</select></label><div className="feature-page__form-actions"><Button variant="secondary" onClick={() => setTestDialog(false)} disabled={testing}>Cancel</Button><Button variant="primary" onClick={runTest} loading={testing}>Send test</Button></div></div>
+            <Modal isOpen={testDialog} onClose={() => !testing && setTestDialog(false)} title="Send a test event">
+                <div className="feature-page__form">
+                    <p className="feature-page__muted">Waybridge will queue a real <code>webhook.test</code> delivery to this active endpoint. The result will appear in delivery history.</p>
+                    <div className="feature-page__form-actions">
+                        <Button variant="secondary" onClick={() => setTestDialog(false)} disabled={testing}>Cancel</Button>
+                        <Button variant="primary" onClick={() => void runTest()} loading={testing}>Queue test</Button>
+                    </div>
+                </div>
             </Modal>
             <Modal isOpen={regenerateDialog} onClose={() => !regenerating && setRegenerateDialog(false)} title="Regenerate signing secret?">
-                <p className="feature-page__muted">This replaces the demo endpoint secret. The new secret is shown once.</p><div className="feature-page__form-actions"><Button variant="secondary" onClick={() => setRegenerateDialog(false)} disabled={regenerating}>Cancel</Button><Button variant="primary" onClick={runRegenerate} loading={regenerating}>Regenerate secret</Button></div>
+                <p className="feature-page__muted">This immediately replaces the current secret. Update your receiver configuration; the new value is shown once.</p>
+                <div className="feature-page__form-actions">
+                    <Button variant="secondary" onClick={() => setRegenerateDialog(false)} disabled={regenerating}>Cancel</Button>
+                    <Button variant="primary" onClick={() => void runRegenerate()} loading={regenerating}>Regenerate secret</Button>
+                </div>
             </Modal>
         </div>
     );

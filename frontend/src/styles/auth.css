@@ -95,8 +95,6 @@
     border: 1px solid var(--input);
     border-radius: var(--radius);
 
-    outline: none;
-
     transition:
         border-color 150ms ease,
         box-shadow 150ms ease;
@@ -106,9 +104,10 @@
     color: var(--muted-foreground);
 }
 
-.form-group input:focus {
+.form-group input:focus-visible {
     border-color: var(--ring);
-
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
     box-shadow: 0 0 0 3px oklch(0.708 0 0 / 20%);
 }
 

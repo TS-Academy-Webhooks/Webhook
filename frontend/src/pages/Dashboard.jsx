@@ -1,202 +1,156 @@
-// src/pages/Dashboard.jsx
-// import { useEffect, useState } from 'react';
-// import { Link } from 'react-router-dom';
-// import { getWebhooks } from '../services/webhookService';
-// import { StatCard } from '../components/dashboard/StatCard';
-// import { Button } from '../components/common/Button';
-// import { ROUTES } from '../constants/routes';
-// import './Dashboard.css';
-
-// Deliberately lean: only webhook stats, since that's the only area with a
-// working backend contract so far. Shipment/event stats slot in the same
-// way once those APIs exist — add more getX({ limit: 1, ... }) calls below
-// and more <StatCard /> entries.
-// export default function Dashboard() {
-//     const [counts, setCounts] = useState({ total: null, active: null, inactive: null });
-//     const [loading, setLoading] = useState(true);
-//     const [error, setError] = useState(null);
-
-//     useEffect(() => {
-//         let cancelled = false;
-
-//         async function loadCounts() {
-//             setLoading(true);
-//             setError(null);
-//             try {
-                // limit: 1 because we only need each response's pagination.total,
-                // not the actual rows — cheaper than fetching full lists.
-//                 const [totalRes, activeRes, inactiveRes] = await Promise.all([
-//                     getWebhooks({ limit: 1 }),
-//                     getWebhooks({ limit: 1, active: true }),
-//                     getWebhooks({ limit: 1, active: false }),
-//                 ]);
-//                 if (cancelled) return;
-//                 setCounts({
-//                     total: totalRes.pagination.total,
-//                     active: activeRes.pagination.total,
-//                     inactive: inactiveRes.pagination.total,
-//                 });
-//             } catch (err) {
-//                 if (!cancelled) setError(err.message);
-//             } finally {
-//                 if (!cancelled) setLoading(false);
-//             }
-//         }
-
-//         loadCounts();
-//         return () => {
-//             cancelled = true;
-//         };
-//     }, []);
-
-//     return (
-//         <div className="dashboard-page">
-//             <div className="dashboard-page__header">
-//                 <h1>Dashboard</h1>
-//                 <Button as={Link} to={ROUTES.WEBHOOK_NEW} variant="primary">
-//                     Create Webhook
-//                 </Button>
-//             </div>
-
-//             {error && (
-//                 <p className="dashboard-page__error" role="alert">
-//                     {error}
-//                 </p>
-//             )}
-
-//             <div className="dashboard-page__stats">
-//                 <StatCard label="Total Webhooks" value={counts.total} loading={loading} />
-//                 <StatCard label="Active Webhooks" value={counts.active} loading={loading} />
-//                 <StatCard label="Inactive Webhooks" value={counts.inactive} loading={loading} />
-//             </div>
-
-//             <div className="dashboard-page__links">
-//                 <Link to={ROUTES.WEBHOOKS}>View all webhooks →</Link>
-//             </div>
-//         </div>
-//     );
-// }
-
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-function Dashboard() {
-  const { user } = useAuth();
+import { StatCard } from "../components/dashboard/StatCard";
+import { Loader } from "../components/common/Loader";
+import { getShipments } from "../services/shipmentService";
+import { getWebhooks } from "../services/webhookService";
+import { getDeliveries } from "../services/deliveryService";
+import { getEvents } from "../services/eventService";
+import { formatDate } from "../utils/formatDate";
+import { formatEventType } from "../utils/formatEventType";
+import "../styles/Dashboard.css";
 
-  return (
-    <section className="dashboard-page">
-      <div className="dashboard-header">
-        <div>
-          <p className="dashboard-title">Overview</p>
-
-          <h1>Dashboard</h1>
-
-          <p className="page-description">
-            Monitor your webhook activity and delivery performance.
-          </p>
-        </div>
-
-        <button className="primary-button">
-          Create webhook
-        </button>
-      </div>
-
-      <div className="welcome-card">
-        <div>
-          <p className="dashboard-title">Welcome back</p>
-
-          <h2>{user?.name || "User"}</h2>
-
-          <p>
-            Here's an overview of your webhook activity.
-          </p>
-        </div>
-      </div>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <span className="stat-label">Total webhooks</span>
-
-          <strong className="stat-value">0</strong>
-
-          <span className="stat-description">
-            Active webhook endpoints
-          </span>
-        </div>
-
-        <div className="stat-card">
-          <span className="stat-label">Events delivered</span>
-
-          <strong className="stat-value">0</strong>
-
-          <span className="stat-description">
-            Successfully delivered events
-          </span>
-        </div>
-
-        <div className="stat-card">
-          <span className="stat-label">Failed deliveries</span>
-
-          <strong className="stat-value">0</strong>
-
-          <span className="stat-description">
-            Events requiring attention
-          </span>
-        </div>
-
-        <div className="stat-card">
-          <span className="stat-label">Delivery rate</span>
-
-          <strong className="stat-value">0%</strong>
-
-          <span className="stat-description">
-            Successful delivery percentage
-          </span>
-        </div>
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div>
-              <h2>Recent deliveries</h2>
-
-              <p>
-                Your latest webhook delivery attempts.
-              </p>
-            </div>
-          </div>
-
-          <div className="empty-state">
-            <h3>No delivery attempts yet</h3>
-
-            <p>
-              Delivery attempts will appear here once your
-              webhooks begin receiving events.
-            </p>
-          </div>
-        </div>
-
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div>
-              <h2>Webhook activity</h2>
-
-              <p>
-                A summary of your webhook events.
-              </p>
-            </div>
-          </div>
-
-          <div className="empty-state">
-            <h3>No activity yet</h3>
-
-            <p>
-              Create a webhook to start receiving events.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+function countValue(result) {
+    return result.status === "fulfilled" ? result.value.pagination.total : null;
 }
 
-export default Dashboard;
+export default function Dashboard() {
+    const { user } = useAuth();
+    const isAdmin = user?.role === "admin";
+    const [stats, setStats] = useState({
+        shipments: null,
+        webhooks: null,
+        delivered: null,
+        failed: null,
+        events: null,
+        deliveryRate: null,
+    });
+    const [recent, setRecent] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [errors, setErrors] = useState([]);
+
+    useEffect(() => {
+        let alive = true;
+        async function load() {
+            setLoading(true);
+            const requests = [
+                getShipments({ page: 1, limit: 1 }),
+                getWebhooks({ page: 1, limit: 1 }),
+                getDeliveries({ page: 1, limit: 5 }),
+                getDeliveries({ page: 1, limit: 1, status: "success" }),
+                getDeliveries({ page: 1, limit: 1, status: "failed" }),
+                ...(isAdmin ? [getEvents({ page: 1, limit: 1 })] : []),
+            ];
+            const results = await Promise.allSettled(requests);
+            if (!alive) return;
+
+            const shipmentResult = results[0];
+            const webhookResult = results[1];
+            const recentResult = results[2];
+            const successResult = results[3];
+            const failedResult = results[4];
+            const eventResult = isAdmin ? results[5] : null;
+            const successCount = countValue(successResult);
+            const failedCount = countValue(failedResult);
+            const denominator =
+                successCount === null || failedCount === null
+                    ? 0
+                    : successCount + failedCount;
+
+            setStats({
+                shipments: countValue(shipmentResult),
+                webhooks: countValue(webhookResult),
+                delivered: successCount,
+                failed: failedCount,
+                events: eventResult ? countValue(eventResult) : null,
+                deliveryRate: denominator
+                    ? `${Math.round((successCount / denominator) * 100)}%`
+                    : denominator === 0 && successCount === 0 && failedCount === 0
+                        ? "—"
+                        : null,
+            });
+            if (recentResult.status === "fulfilled") setRecent(recentResult.value.items);
+            else setRecent([]);
+
+            setErrors(
+                results
+                    .filter((result) => result.status === "rejected")
+                    .map((result) => result.reason?.message || "Unable to load part of the dashboard."),
+            );
+            setLoading(false);
+        }
+
+        void load();
+        return () => { alive = false; };
+    }, [isAdmin]);
+
+    const showValue = (value) => value ?? "—";
+    return (
+        <section className="dashboard-page">
+            <header className="dashboard-page__header">
+                <div>
+                    <p className="dashboard-title">{isAdmin ? "Operations overview" : "Your account"}</p>
+                    <h1>Dashboard</h1>
+                    <p className="page-description">
+                        Welcome back, {user?.name || "there"}. Here’s the latest shipment and webhook activity available to your account.
+                    </p>
+                </div>
+                <div className="dashboard-page__actions">
+                    <Link to="/shipments/new">Create shipment</Link>
+                    <Link to="/webhooks/new">Create webhook</Link>
+                </div>
+            </header>
+
+            {errors.length > 0 && (
+                <div className="dashboard-page__error" role="status" aria-live="polite">
+                    Some dashboard data could not be loaded: {errors.join(" ")}
+                </div>
+            )}
+
+            <div className="dashboard-page__stats">
+                <StatCard label="Shipments" value={showValue(stats.shipments)} loading={loading} />
+                <StatCard label="Webhook endpoints" value={showValue(stats.webhooks)} loading={loading} />
+                <StatCard label="Successful deliveries" value={showValue(stats.delivered)} loading={loading} />
+                <StatCard label="Failed deliveries" value={showValue(stats.failed)} loading={loading} />
+                {isAdmin && <StatCard label="Shipment events" value={showValue(stats.events)} loading={loading} />}
+                <StatCard label="Success rate" value={showValue(stats.deliveryRate)} loading={loading} />
+            </div>
+
+            <section className="feature-page__panel dashboard-recent">
+                <div className="dashboard-recent__header">
+                    <div>
+                        <h2>Recent delivery summaries</h2>
+                        <p className="feature-page__muted">Latest webhook outcomes and attempt history.</p>
+                    </div>
+                    <Link to="/deliveries">View all</Link>
+                </div>
+                {loading ? <Loader label="Loading recent deliveries" showLabel /> : recent.length ? (
+                    <div className="feature-page__table">
+                        <table>
+                            <thead><tr><th scope="col">Event</th><th scope="col">Webhook</th><th scope="col">Status</th><th scope="col">Attempts</th><th scope="col">Last update</th></tr></thead>
+                            <tbody>
+                                {recent.map((delivery) => (
+                                    <tr key={delivery.id}>
+                                        <td><Link to={`/deliveries/${encodeURIComponent(delivery.id)}`}>{delivery.event?.eventId ?? formatEventType(delivery.event?.type ?? "Delivery")}</Link></td>
+                                        <td>{delivery.webhook?.name ?? delivery.webhook?.url ?? "—"}</td>
+                                        <td>{delivery.status}</td>
+                                        <td>{delivery.attemptCount}</td>
+                                        <td>{formatDate(delivery.attemptedAt ?? delivery.updatedAt ?? delivery.createdAt, { withTime: true })}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : <p className="feature-page__muted">No delivery summaries yet. Once a webhook receives an event, its delivery will appear here.</p>}
+            </section>
+
+            <nav className="dashboard-page__links" aria-label="Dashboard quick links">
+                <Link to="/shipments">View shipments</Link>
+                <Link to="/webhooks">Manage webhooks</Link>
+                {isAdmin && <Link to="/events">Inspect shipment events</Link>}
+                <Link to="/tools/demo-receiver">Open demo receiver</Link>
+            </nav>
+        </section>
+    );
+}

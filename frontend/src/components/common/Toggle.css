@@ -1,20 +1,36 @@
 /* src/components/common/Toggle.css */
 .toggle {
     position: relative;
-    width: 2.25rem;
-    height: 1.25rem;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--muted);
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem !important;
+    place-items: center;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
     cursor: pointer;
     padding: 0;
-    transition: background-color 0.15s ease;
     flex-shrink: 0;
 }
 
+.toggle::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.25rem;
+    height: 1.25rem;
+    transform: translate(-50%, -50%);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--muted);
+    content: "";
+    transition: background-color .15s ease, border-color .15s ease;
+}
+
 .toggle:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
+    outline: 3px solid var(--ring);
+    outline-offset: 1px;
 }
 
 .toggle:disabled {
@@ -23,19 +39,23 @@
 }
 
 .toggle--on {
+    background: transparent;
+}
+
+.toggle--on::before {
     background: var(--primary);
     border-color: var(--primary);
 }
 
 .toggle__thumb {
     position: absolute;
-    top: 1px;
-    left: 1px;
+    top: calc(50% - .5625rem);
+    left: .3125rem;
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
     background: var(--card);
-    transition: transform 0.15s ease;
+    transition: transform .15s ease;
 }
 
 .toggle--on .toggle__thumb {

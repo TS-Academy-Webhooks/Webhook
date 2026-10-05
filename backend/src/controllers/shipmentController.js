@@ -1,7 +1,7 @@
 const Shipment = require("../models/Shipment");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
-const { sendSuccess } = require("../utils/apiResponse");
+const { paginatedData, sendSuccess } = require("../utils/apiResponse");
 const {
   changeShipmentStatus,
   createShipment,
@@ -21,9 +21,10 @@ exports.createShipment = async (req, res) => {
     shipmentData.customer = req.body.customer;
     shipmentData.customerId = req.body.customerId;
   }
+  shipmentData.createdBy = req.user._id;
 
   const shipment = await createShipment(shipmentData);
-  await createShipmentEvent(shipment);
+  await createShipmentEvent(shipment, req.body.note);
   return sendSuccess(res, "Shipment created successfully", shipment, 201);
 };
 
@@ -53,15 +54,11 @@ exports.getShipments = async (req, res) => {
     Shipment.countDocuments(filter),
   ]);
 
-  return sendSuccess(res, "Shipments retrieved successfully", {
-    shipments,
-    pagination: {
-      page,
-      limit,
-      totalItems,
-      totalPages: Math.ceil(totalItems / limit),
-    },
-  });
+  return sendSuccess(
+    res,
+    "Shipments retrieved successfully",
+    paginatedData(shipments, page, limit, totalItems, "shipments")
+  );
 };
 
 exports.getShipment = async (req, res) => {
@@ -95,7 +92,7 @@ exports.assignShipmentCustomer = async (req, res) => {
 };
 
 exports.updateShipmentStatus = async (req, res) => {
-  const shipment = await changeShipmentStatus(req.params.id, req.body.status);
-  await createShipmentEvent(shipment);
+  const shipment = await changeShipmentStatus(req.params.id, req.body.status, req.body.note);
+  await createShipmentEvent(shipment, req.body.note);
   return sendSuccess(res, "Shipment status updated successfully", shipment);
 };

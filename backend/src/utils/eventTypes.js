@@ -1,4 +1,5 @@
 module.exports = [
+  "webhook.test",
   "shipment.created",
   "shipment.picked_up",
   "shipment.in_transit",

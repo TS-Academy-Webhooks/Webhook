@@ -9,10 +9,8 @@ export function validateSignup({ name, email, password, confirmPassword }) {
     const errors = {};
 
     const trimmedName = (name || '').trim();
-    if (!trimmedName) {
-        errors.name = 'Name is required.';
-    } else if (trimmedName.length < 2) {
-        errors.name = 'Name must be at least 2 characters.';
+    if (trimmedName.length < 2 || trimmedName.length > 60) {
+        errors.name = 'Name must be between 2 and 60 characters.';
     }
 
     const trimmedEmail = (email || '').trim();
@@ -24,8 +22,8 @@ export function validateSignup({ name, email, password, confirmPassword }) {
 
     if (!password) {
         errors.password = 'Password is required.';
-    } else if (password.length < 8) {
-        errors.password = 'Password must be at least 8 characters.';
+    } else if (password.length < 12) {
+        errors.password = 'Password must be at least 12 characters.';
     }
 
     if (!confirmPassword) {

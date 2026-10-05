@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const deliveryAttemptSchema = new mongoose.Schema(
   {
+    deliveryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Delivery",
+      index: true,
+    },
     webhookId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Webhook",
@@ -29,6 +34,10 @@ const deliveryAttemptSchema = new mongoose.Schema(
       type: String,
       maxlength: 1000,
     },
+    errorMessage: {
+      type: String,
+      maxlength: 1000,
+    },
     duration: {
       type: Number,
       min: 0,
@@ -38,9 +47,34 @@ const deliveryAttemptSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
+deliveryAttemptSchema.index({ deliveryId: 1, attemptNumber: 1 });
 deliveryAttemptSchema.index({ webhookId: 1, eventId: 1 });
+deliveryAttemptSchema.virtual("delivery").get(function getDelivery() {
+  return this.deliveryId;
+});
+deliveryAttemptSchema.virtual("statusCode").get(function getStatusCode() {
+  return this.httpStatus ?? null;
+});
+deliveryAttemptSchema.virtual("responseBody").get(function getResponseBody() {
+  return this.response ?? null;
+});
+deliveryAttemptSchema.virtual("durationMs").get(function getDurationMs() {
+  return this.duration ?? null;
+});
+deliveryAttemptSchema.set("toJSON", {
+  virtuals: true,
+  transform(_document, result) {
+    result.id = String(result._id);
+    delete result.__v;
+    return result;
+  },
+});
 
 module.exports = mongoose.model("DeliveryAttempt", deliveryAttemptSchema);
