@@ -1,0 +1,16 @@
+{
+  "name": "waybridge-logistics-webhooks",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev:api": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test",
+    "lint": "npm --prefix frontend run lint"
+  }
+}

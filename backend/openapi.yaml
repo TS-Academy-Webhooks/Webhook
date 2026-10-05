@@ -1,0 +1,851 @@
+openapi: 3.0.3
+info:
+  title: Logistics Webhook API
+  version: 1.0.0
+  description: |
+    Express serves this API and, when built, the Vite frontend from one origin.
+    Responses use { success, message, data }; validation failures also include
+    errors[]. Paginated data contains items and a resource-named alias, and
+    pagination includes both total and totalItems. Records retain _id and add id.
+
+    Access tokens are short-lived (15 minutes), signed with HS256, and bound to
+    a live revocable database session. Login, registration, and refresh set a
+    30-day HttpOnly refresh cookie; refresh/logout require that cookie. Keep
+    access tokens in memory and send browser auth requests with credentials.
+    Customers are restricted to their own shipments, webhooks, and deliveries;
+    customer-owned hooks receive only events for shipments assigned to that
+    customer. Admin-owned hooks can receive platform-wide events and admins can
+    access all records and admin-only operations.
+
+    Outgoing webhooks preserve the existing contract: the body is the exact
+    JSON serialization of event.payload. X-Webhook-Signature is the unprefixed
+    lowercase-hex HMAC-SHA256 of the exact raw body. No envelope, timestamp,
+    or extra signature headers are emitted. Receivers must verify raw bytes
+    and compare signatures in constant time. The demo receiver also accepts
+    davinci's timestamped-envelope signature as an inbound compatibility mode.
+    Automatic delivery retries failed requests after 2 and 5 seconds, up to
+    three attempts.
+    Webhook URLs are revalidated before delivery; production blocks unsafe
+    private/loopback destinations and redirects are not followed.
+  contact:
+    name: Backend maintainers
+servers:
+  - url: /
+tags:
+  - name: Health
+  - name: Authentication
+  - name: Shipments
+  - name: Tracking
+  - name: Webhooks
+  - name: Events
+  - name: Deliveries
+  - name: Demo receiver
+paths:
+  /:
+    get:
+      tags: [Health]
+      summary: API status when no frontend build is present
+      responses:
+        "200":
+          description: API status or Vite index.html when a production build exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+            text/html:
+              schema:
+                type: string
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Health check compatibility alias
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a customer
+      description: Submitted roles are ignored; the new account is always a customer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string, minLength: 1 }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 12 }
+      responses:
+        "201":
+          description: Customer account created; refresh cookie is set
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Access token returned and refresh cookie set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Rotate the refresh cookie
+      security:
+        - refreshCookie: []
+      responses:
+        "200":
+          description: New access token and rotated refresh cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Revoke the current refresh session
+      security:
+        - refreshCookie: []
+      responses:
+        "200":
+          description: Session revoked and cookie cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+  /api/auth/change-password:
+    post:
+      tags: [Authentication]
+      summary: Change password and revoke all sessions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 12 }
+      responses:
+        "200":
+          description: Password changed; sign in again
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /api/auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get the current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Flat user fields plus the user alias
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /api/shipments:
+    get:
+      tags: [Shipments]
+      summary: List shipments
+      description: Customers see only shipments assigned to them; admins see all.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: search
+          schema: { type: string, maxLength: 100 }
+        - in: query
+          name: status
+          schema: { $ref: "#/components/schemas/ShipmentStatus" }
+      responses:
+        "200":
+          description: Paginated shipments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Shipments]
+      summary: Create a shipment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origin, destination, amount]
+              properties:
+                customer: { type: string }
+                customerId: { type: string }
+                origin: { type: string }
+                destination: { type: string }
+                amount: { type: number, minimum: 0 }
+                note: { type: string, maxLength: 500 }
+      responses:
+        "201":
+          description: Shipment created and shipment.created event recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /api/shipments/{id}:
+    parameters:
+      - $ref: "#/components/parameters/MongoId"
+    get:
+      tags: [Shipments]
+      summary: Get one shipment
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Shipment with statusHistory and timeline aliases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/shipments/{id}/customer:
+    parameters:
+      - $ref: "#/components/parameters/MongoId"
+    patch:
+      tags: [Shipments]
+      summary: Assign a shipment to a customer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerId]
+              properties:
+                customerId: { type: string }
+      responses:
+        "200":
+          description: Shipment assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/shipments/{id}/status:
+    parameters:
+      - $ref: "#/components/parameters/MongoId"
+    patch:
+      tags: [Shipments]
+      summary: Apply a valid shipment status transition
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: "#/components/schemas/ShipmentStatus" }
+                note: { type: string, maxLength: 500 }
+      responses:
+        "200":
+          description: Shipment updated and event dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/tracking/{trackingNumber}:
+    get:
+      tags: [Tracking]
+      summary: Public tracking lookup
+      parameters:
+        - in: path
+          name: trackingNumber
+          required: true
+          description: Case-insensitive tracking number
+          schema: { type: string, pattern: "^[Tt][Rr][Kk]-[0-9]{5}$" }
+      responses:
+        "200":
+          description: Public shipment status and timeline without private customer data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/webhooks:
+    get:
+      tags: [Webhooks]
+      summary: List owned webhooks
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+        - in: query
+          name: search
+          schema: { type: string, maxLength: 100 }
+        - in: query
+          name: active
+          schema: { type: boolean }
+        - in: query
+          name: isActive
+          schema: { type: boolean }
+        - in: query
+          name: event
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated webhooks with masked secrets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Webhooks]
+      summary: Create an owned webhook
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookInput"
+      responses:
+        "201":
+          description: Webhook with its one-time full secret
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400": { $ref: "#/components/responses/BadRequest" }
+  /api/webhooks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/MongoId"
+    get:
+      tags: [Webhooks]
+      summary: Get an owned webhook with a masked secret
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Webhook details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Webhooks]
+      summary: Update or regenerate a webhook secret
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookUpdate"
+      responses:
+        "200":
+          description: Updated webhook; full secret only when regenerated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Webhooks]
+      summary: Update webhook (PUT compatibility alias)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookUpdate"
+      responses:
+        "200":
+          description: Updated webhook
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+    delete:
+      tags: [Webhooks]
+      summary: Delete an owned webhook
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Webhook deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+  /api/webhooks/{id}/test:
+    post:
+      tags: [Webhooks]
+      summary: Queue a test delivery
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MongoId"
+      responses:
+        "202":
+          description: A webhook.test event and delivery summary were queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/webhooks/{id}/deliveries:
+    get:
+      tags: [Webhooks, Deliveries]
+      summary: List summaries and attempts for a webhook
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MongoId"
+        - $ref: "#/components/parameters/Page"
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - in: query
+          name: status
+          schema: { type: string, enum: [pending, success, failed] }
+      responses:
+        "200":
+          description: Webhook delivery summaries with nested attempts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/events:
+    get:
+      tags: [Events]
+      summary: List events (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: shipmentId
+          schema: { type: string, pattern: "^[a-fA-F0-9]{24}$" }
+        - in: query
+          name: search
+          description: Search by public event ID
+          schema: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: Paginated events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/events/{id}:
+    get:
+      tags: [Events]
+      summary: Read an event by MongoDB ID or public event ID (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Event details, compatibility event alias, and associated delivery summaries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/deliveries:
+    get:
+      tags: [Deliveries]
+      summary: List owned delivery summaries
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - in: query
+          name: status
+          schema: { type: string, enum: [pending, success, failed] }
+        - in: query
+          name: webhookId
+          schema: { type: string }
+        - in: query
+          name: eventId
+          schema: { type: string }
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated delivery summaries with compatibility aliases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+  /api/deliveries/{id}:
+    get:
+      tags: [Deliveries]
+      summary: Get a summary by ID or a historical attempt by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MongoId"
+      responses:
+        "200":
+          description: Summary with nested individual attempts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/deliveries/{id}/resend:
+    post:
+      tags: [Deliveries]
+      summary: Queue a manual retry
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MongoId"
+      responses:
+        "202":
+          description: New attempt queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/deliveries/{id}/retry:
+    post:
+      tags: [Deliveries]
+      summary: Retry compatibility alias
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/MongoId"
+      responses:
+        "202":
+          description: New attempt queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+  /api/demo-receiver:
+    post:
+      tags: [Demo receiver]
+      summary: Receive and inspect a webhook request
+      description: Public in development; production requires ENABLE_DEMO_RECEIVER=true.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Request stored in in-memory history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "429": { $ref: "#/components/responses/RateLimited" }
+    get:
+      tags: [Demo receiver]
+      summary: List received requests (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - in: query
+          name: signatureValid
+          schema: { type: string, enum: ["true", "false", unknown] }
+        - in: query
+          name: event
+          schema: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: Redacted headers and capped request-body previews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+    delete:
+      tags: [Demo receiver]
+      summary: Clear received-request history (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: History cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+  /api/demo-receiver/fail:
+    post:
+      tags: [Demo receiver]
+      summary: Receive and deliberately fail a webhook request
+      responses:
+        "500":
+          description: Default failure response; admin response profiles can configure it
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /api/demo-receiver/config:
+    get:
+      tags: [Demo receiver]
+      summary: Read response profiles (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current success and failure profiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+    patch:
+      tags: [Demo receiver]
+      summary: Update response profiles (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  $ref: "#/components/schemas/SuccessProfile"
+                failure:
+                  $ref: "#/components/schemas/FailureProfile"
+      responses:
+        "200":
+          description: Updated response profiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400": { $ref: "#/components/responses/BadRequest" }
+    delete:
+      tags: [Demo receiver]
+      summary: Reset response profiles (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Default response profiles restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: Production cookie name is __Secure-refreshToken.
+  parameters:
+    MongoId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, pattern: "^[a-fA-F0-9]{24}$" }
+    Page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 1, default: 1 }
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+  schemas:
+    SuccessEnvelope:
+      type: object
+      required: [success, message, data]
+      properties:
+        success: { type: boolean, enum: [true] }
+        message: { type: string }
+        data: {}
+    ErrorEnvelope:
+      type: object
+      required: [success, message, data]
+      properties:
+        success: { type: boolean, enum: [false] }
+        message: { type: string }
+        data: { type: object, nullable: true }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+    ShipmentStatus:
+      type: string
+      enum:
+        - created
+        - picked_up
+        - in_transit
+        - arrived_at_hub
+        - out_for_delivery
+        - delivered
+        - delivery_failed
+        - cancelled
+    WebhookInput:
+      type: object
+      required: [name, url, events]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        url: { type: string, format: uri, description: HTTP(S) URL without credentials }
+        events:
+          type: array
+          minItems: 1
+          items: { type: string, description: Shipment event type or "*" }
+        active: { type: boolean, deprecated: true }
+        isActive: { type: boolean }
+    WebhookUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        url: { type: string, format: uri }
+        events: { type: array, minItems: 1, items: { type: string } }
+        active: { type: boolean, deprecated: true }
+        isActive: { type: boolean }
+        regenerateSecret: { type: boolean }
+    SuccessProfile:
+      type: object
+      properties:
+        statusCode: { type: integer, minimum: 200, maximum: 299 }
+        body: {}
+    FailureProfile:
+      type: object
+      properties:
+        statusCode: { type: integer, minimum: 400, maximum: 599 }
+        body: {}
+  responses:
+    BadRequest:
+      description: Invalid input or transition
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Unauthorized:
+      description: Missing or invalid access/refresh credential
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Forbidden:
+      description: Caller lacks the required role
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    NotFound:
+      description: Record or route not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Conflict:
+      description: Duplicate resource or operation already in progress
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }

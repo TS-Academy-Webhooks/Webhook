@@ -1,0 +1,172 @@
+.feature-page__action-link {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: .55rem .9rem;
+    border-radius: var(--radius);
+    color: var(--primary-foreground);
+    background: var(--primary);
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.feature-page__action-link:hover {
+    filter: brightness(.95);
+}
+
+.shipment-toolbar label {
+    display: contents;
+}
+
+.shipment-status {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    padding: .25rem .6rem;
+    border-radius: 999px;
+    color: var(--muted-foreground);
+    background: var(--muted);
+    font-size: .75rem;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.shipment-status--delivered {
+    color: #16644b;
+    background: color-mix(in oklab, #2c9b6f 14%, var(--card));
+}
+
+.shipment-status--delivery_failed,
+.shipment-status--cancelled {
+    color: var(--destructive);
+    background: color-mix(in oklab, var(--destructive) 12%, var(--card));
+}
+
+.shipment-status--out_for_delivery,
+.shipment-status--in_transit,
+.shipment-status--arrived_at_hub,
+.shipment-status--picked_up {
+    color: var(--primary);
+    background: color-mix(in oklab, var(--primary) 10%, var(--card));
+}
+
+.shipment-form {
+    width: 100%;
+    max-width: 46rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+}
+
+.shipment-form__columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.shipment-form__note {
+    display: grid;
+    gap: .4rem;
+    color: var(--foreground);
+    font-size: .85rem;
+    font-weight: 550;
+}
+
+.shipment-form__note textarea,
+.shipment-admin-actions textarea,
+.shipment-admin-actions select,
+.shipment-admin-actions input {
+    min-height: 2.75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    background: var(--card);
+}
+
+.shipment-form__note textarea,
+.shipment-admin-actions textarea {
+    min-height: 7rem;
+    resize: vertical;
+}
+
+.shipment-form__field-error {
+    color: var(--destructive);
+    font-size: .78rem;
+    font-weight: 400;
+}
+
+.shipment-details__tracking {
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.shipment-details__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.shipment-details__actions a {
+    color: var(--primary);
+    font-size: .82rem;
+}
+
+.shipment-timeline {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.shipment-timeline li {
+    display: grid;
+    grid-template-columns: .75rem minmax(0, 1fr);
+    gap: .7rem;
+}
+
+.shipment-timeline li::before {
+    width: .65rem;
+    height: .65rem;
+    margin-top: .32rem;
+    border-radius: 50%;
+    background: var(--primary);
+    content: "";
+}
+
+.shipment-timeline li > div {
+    display: grid;
+    gap: .18rem;
+}
+
+.shipment-timeline time {
+    color: var(--muted-foreground);
+    font-size: .78rem;
+}
+
+.shipment-admin-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem;
+}
+
+.shipment-admin-actions .feature-page__form {
+    max-width: none;
+}
+
+.shipment-table a {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 680px) {
+    .shipment-form__columns,
+    .shipment-admin-actions {
+        grid-template-columns: 1fr;
+    }
+}
