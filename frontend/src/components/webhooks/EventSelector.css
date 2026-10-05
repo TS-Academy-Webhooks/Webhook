@@ -2,9 +2,10 @@
 
 .event-selector {
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-card);
     padding: 1rem;
     margin: 0;
+    background: var(--card);
 }
 
 .event-selector__header {
@@ -16,7 +17,7 @@
 
 .event-selector__legend {
     font-size: 0.8125rem;
-    font-weight: 500;
+    font-weight: 650;
     padding: 0;
 }
 
@@ -24,7 +25,11 @@
     background: none;
     border: none;
     color: var(--primary);
+    min-height: 2.75rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.45rem;
     font-size: 0.8125rem;
+    font-weight: 650;
     cursor: pointer;
     padding: 0;
 }
@@ -47,10 +52,24 @@
 
 .event-selector__option {
     display: flex;
+    min-height: 2.75rem;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
     cursor: pointer;
+}
+
+.event-selector__option input {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
+    accent-color: var(--primary);
+}
+
+.event-selector__option:has(input:focus-visible) {
+    border-radius: 0.45rem;
+    outline: 3px solid color-mix(in oklab, var(--ring) 35%, transparent);
+    outline-offset: 2px;
 }
 
 .event-selector__error {
@@ -59,4 +78,4 @@
     margin: 0.75rem 0 0;
 }
 
-.event-selector:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.event-selector:focus-within { border-color: color-mix(in oklab, var(--primary) 35%, var(--border)); }

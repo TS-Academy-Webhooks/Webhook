@@ -1,0 +1,125 @@
+.demo-receiver-url {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    margin: 1rem 0;
+}
+
+.demo-receiver-url code {
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+    color: var(--foreground);
+    background: color-mix(in oklab, var(--brand-indigo-soft) 45%, var(--card));
+}
+
+.demo-receiver-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.demo-receiver-links a {
+    color: var(--primary);
+    font-size: .84rem;
+    font-weight: 600;
+    text-underline-offset: .18em;
+}
+
+.demo-receiver-profiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem;
+}
+
+.demo-receiver-profiles .feature-page__form {
+    max-width: none;
+}
+
+.demo-receiver-profiles textarea {
+    min-height: 10rem;
+    font-family: var(--font-mono-family);
+    font-size: .78rem;
+}
+
+.demo-receiver-profiles input,
+.demo-receiver-profiles textarea,
+.demo-receiver-filters input,
+.demo-receiver-filters select {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: .65rem;
+    color: var(--foreground);
+    background: var(--card);
+}
+
+.demo-receiver-profiles input:focus-visible,
+.demo-receiver-profiles textarea:focus-visible,
+.demo-receiver-filters input:focus-visible,
+.demo-receiver-filters select:focus-visible {
+    border-color: var(--ring);
+    outline: 3px solid color-mix(in oklab, var(--ring) 25%, transparent);
+    outline-offset: 1px;
+}
+
+.demo-receiver-profiles textarea {
+    resize: vertical;
+}
+
+.demo-receiver-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: .75rem;
+}
+
+.demo-receiver-toolbar h2 {
+    margin: 0;
+}
+
+.demo-receiver-filters label {
+    display: contents;
+}
+
+.demo-receiver-reset {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.demo-receiver-page details summary {
+    color: var(--primary);
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: .82rem;
+}
+
+.demo-receiver-page details pre {
+    max-height: 18rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+    .demo-receiver-profiles {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .demo-receiver-url,
+    .demo-receiver-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .demo-receiver-url code {
+        width: 100%;
+    }
+}

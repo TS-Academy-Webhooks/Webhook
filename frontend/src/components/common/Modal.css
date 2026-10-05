@@ -3,7 +3,7 @@
 .modal__backdrop {
     position: fixed;
     inset: 0;
-    background: color-mix(in oklab, black 50%, transparent);
+    background: rgb(15 23 42 / 48%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -15,14 +15,14 @@
 .modal__dialog {
     background: var(--card);
     color: var(--card-foreground);
-    border-radius: var(--radius);
+    border-radius: var(--radius-large);
     border: 1px solid var(--border);
     width: 100%;
     max-width: 28rem;
     max-height: min(90vh, 90dvh);
     overflow-y: auto;
     overscroll-behavior: contain;
-    box-shadow: 0 10px 30px color-mix(in oklab, black 25%, transparent);
+    box-shadow: 0 24px 60px rgb(15 23 42 / 22%);
 }
 
 .modal__dialog:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
@@ -37,7 +37,8 @@
 
 .modal__title {
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     margin: 0;
 }
 
@@ -48,11 +49,17 @@
     line-height: 1;
     color: var(--muted-foreground);
     cursor: pointer;
-    padding: 0.25rem;
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    padding: 0;
+    border-radius: 0.5rem;
 }
 
 .modal__close:hover {
     color: var(--foreground);
+    background: color-mix(in oklab, var(--brand-indigo-soft) 55%, var(--card));
 }
 
 .modal__close:focus-visible {
@@ -62,4 +69,18 @@
 
 .modal__body {
     padding: 1.25rem;
+}
+
+@media (max-width: 480px) {
+    .modal__backdrop {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal__dialog {
+        max-height: min(92vh, 92dvh);
+        max-width: none;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+    }
 }

@@ -3,7 +3,7 @@
 .webhook-details {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.35rem;
     max-width: 66rem;
 }
 
@@ -16,14 +16,16 @@
 }
 
 .webhook-details__header h1 {
-    font-size: 1.25rem;
-    font-weight: 600;
+    color: var(--foreground);
+    font-size: clamp(1.8rem, 3vw, 2.25rem);
+    font-weight: 700;
+    letter-spacing: -.045em;
     margin: 0 0 0.5rem;
 }
 
 .webhook-details__identity { min-width: 0; }
 .webhook-details__identity > p:first-child { margin: 0 0 .4rem; font-size: .8rem; }
-.webhook-details__identity > p:first-child a { color: var(--primary); }
+.webhook-details__identity > p:first-child a { display: inline-flex; min-height: 2.75rem; align-items: center; color: var(--primary); }
 .webhook-details__url-text { max-width: min(60ch, 100%); margin: 0 0 .75rem; overflow-wrap: anywhere; color: var(--muted-foreground); font: .8rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
 
 .webhook-details__actions {
@@ -35,8 +37,9 @@
 .webhook-details__card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-card);
     padding: 1.25rem;
+    box-shadow: var(--shadow-card);
 }
 
 .webhook-details__card h2 {
@@ -56,10 +59,10 @@
 
 .webhook-details__url {
     flex: 1;
-    font-family: monospace;
+    font-family: var(--font-mono-family);
     font-size: 0.8125rem;
     background: var(--muted);
-    border-radius: var(--radius);
+    border-radius: .65rem;
     padding: 0.5rem 0.75rem;
     overflow-x: auto;
     white-space: nowrap;
@@ -99,15 +102,16 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    border: 1px solid var(--destructive);
+    border: 1px solid color-mix(in oklab, var(--destructive) 40%, var(--border));
     border-radius: var(--radius);
-    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    background: color-mix(in oklab, var(--destructive) 7%, var(--card));
     color: var(--destructive);
 }
 
 .webhook-delivery-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; }
 .webhook-delivery-panel__heading h2 { margin-bottom: .25rem; }
 .webhook-delivery-panel__heading a, .webhook-delivery-panel__table a { color: var(--primary); font-size: .8rem; text-decoration: none; }
+.webhook-delivery-panel__heading a { display: inline-flex; min-height: 2.75rem; align-items: center; }
 .webhook-delivery-panel__heading a:hover, .webhook-delivery-panel__table a:hover { text-decoration: underline; }
 .webhook-delivery-panel__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; margin: .6rem 0 1rem; }
 .webhook-delivery-panel__stats div { display: grid; gap: .3rem; padding: .7rem .8rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--background); }

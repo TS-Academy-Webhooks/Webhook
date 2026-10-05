@@ -1,69 +1,149 @@
-/* src/styles/variable.css */
-
 :root {
-  /* Colors */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+    color-scheme: light;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+    --brand-indigo: #5548e8;
+    --brand-indigo-hover: #4437d6;
+    --brand-indigo-soft: #f0efff;
+    --brand-indigo-deep: #33298b;
+    --brand-on-deep: #ffffff;
+    --brand-slate: #18233a;
+    --brand-slate-strong: #28344d;
+    --brand-copy: #59647a;
+    --brand-copy-muted: #667187;
+    --brand-copy-soft: #707b8e;
+    --brand-copy-faint: #8992a2;
+    --brand-border: #e6eaf2;
+    --brand-canvas: #f8faff;
+    --surface-blue: #eaf5ff;
+    --surface-green: #e8f8f1;
+    --surface-neutral: #f0f2f5;
+    --brand-blue: #2876c7;
+    --brand-green: #188461;
+    --brand-hero-glow: rgb(224 222 255 / 56%);
+    --brand-cta-glow: rgb(177 168 255 / 35%);
 
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+    --background: var(--brand-canvas);
+    --foreground: var(--brand-slate);
+    --card: #ffffff;
+    --card-foreground: var(--brand-slate);
+    --popover: #ffffff;
+    --popover-foreground: var(--brand-slate);
+    --primary: var(--brand-indigo);
+    --primary-foreground: #ffffff;
+    --secondary: #ffffff;
+    --secondary-foreground: #27334c;
+    --muted: #edf0f5;
+    --muted-foreground: var(--brand-copy);
+    --accent: var(--brand-indigo);
+    --accent-foreground: #ffffff;
+    --destructive: #b42332;
+    --destructive-foreground: #ffffff;
+    --success: #16825d;
+    --success-foreground: #ffffff;
+    --warning: #8a5700;
+    --warning-foreground: #ffffff;
+    --border: var(--brand-border);
+    --input: #d9deea;
+    --ring: #7568f3;
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+    --sidebar: #ffffff;
+    --sidebar-foreground: var(--brand-slate);
+    --sidebar-primary: var(--brand-indigo);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: var(--brand-indigo-soft);
+    --sidebar-accent-foreground: var(--brand-slate);
+    --sidebar-border: var(--brand-border);
+    --sidebar-ring: var(--ring);
 
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+    --chart-1: #5548e8;
+    --chart-2: #2876c7;
+    --chart-3: #16825d;
+    --chart-4: #8a5700;
+    --chart-5: #b42332;
 
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+    --radius: 0.625rem;
+    --radius-card: 0.875rem;
+    --radius-large: 1.125rem;
 
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
 
-  /* Border radius */
-  --radius: 0.625rem;
+    --shadow-sm: 0 1px 2px rgb(25 36 69 / 5%);
+    --shadow-md: 0 8px 24px rgb(25 36 69 / 7%);
+    --shadow-card: 0 12px 34px rgb(25 36 69 / 5%);
 
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-
-  /* Font */
-  --font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+    --font-family: "Inter Variable", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-heading-family: "Inter Variable", Inter, system-ui, sans-serif;
+    --font-mono-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
-/* Dark mode */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
+    color-scheme: dark;
 
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
+    --brand-indigo: #948bff;
+    --brand-indigo-hover: #a9a2ff;
+    --brand-indigo-soft: #302d52;
+    --brand-indigo-deep: #29264f;
+    --brand-on-deep: #f1f4fa;
+    --brand-slate: #f1f4fa;
+    --brand-slate-strong: #e2e8f0;
+    --brand-copy: #c1cada;
+    --brand-copy-muted: #adb8c9;
+    --brand-copy-soft: #aeb8c8;
+    --brand-copy-faint: #98a4b7;
+    --brand-border: #354052;
+    --brand-canvas: #141820;
+    --surface-blue: #223349;
+    --surface-green: #1e3931;
+    --surface-neutral: #283141;
+    --brand-blue: #80bff4;
+    --brand-green: #68d2a7;
+    --brand-hero-glow: rgb(148 139 255 / 24%);
+    --brand-cta-glow: rgb(148 139 255 / 28%);
 
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+    --background: var(--brand-canvas);
+    --foreground: var(--brand-slate);
+    --card: #1c2431;
+    --card-foreground: var(--brand-slate);
+    --popover: #202938;
+    --popover-foreground: var(--brand-slate);
+    --primary: var(--brand-indigo);
+    --primary-foreground: #17162b;
+    --secondary: #283141;
+    --secondary-foreground: #f1f4fa;
+    --muted: #283141;
+    --muted-foreground: var(--brand-copy-muted);
+    --accent: var(--brand-indigo);
+    --accent-foreground: #17162b;
+    --destructive: #ff858b;
+    --destructive-foreground: #2a1116;
+    --success: #54c89b;
+    --success-foreground: #10261e;
+    --warning: #f3bf62;
+    --warning-foreground: #2b2111;
+    --border: var(--brand-border);
+    --input: #465164;
+    --ring: #a9a2ff;
 
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+    --sidebar: #191f2b;
+    --sidebar-foreground: var(--brand-slate);
+    --sidebar-primary: var(--brand-indigo);
+    --sidebar-primary-foreground: #17162b;
+    --sidebar-accent: #29273e;
+    --sidebar-accent-foreground: var(--brand-slate);
+    --sidebar-border: var(--brand-border);
+    --sidebar-ring: var(--ring);
 
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+    --chart-1: #a39bff;
+    --chart-2: #70b7f2;
+    --chart-3: #54c89b;
+    --chart-4: #f3bf62;
+    --chart-5: #ff858b;
 
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
+    --shadow-md: 0 8px 24px rgb(0 0 0 / 22%);
+    --shadow-card: 0 12px 34px rgb(0 0 0 / 18%);
 }

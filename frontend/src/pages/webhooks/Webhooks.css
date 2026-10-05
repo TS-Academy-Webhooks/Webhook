@@ -1,9 +1,8 @@
 /* src/pages/webhooks/Webhooks.css */
 
 .webhooks-page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
+    display: grid;
+    gap: 1.35rem;
 }
 
 .webhooks-page__header {
@@ -14,13 +13,14 @@
 }
 
 .webhooks-page__header h1 {
-    font-size: 1.5rem;
-    font-weight: 650;
+    color: var(--foreground);
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+    font-weight: 700;
     letter-spacing: -0.025em;
     margin: 0;
 }
 
-.webhooks-page__header p { margin: .3rem 0 0; color: var(--muted-foreground); font-size: .85rem; }
+.webhooks-page__header p { margin: .35rem 0 0; color: var(--muted-foreground); font-size: .9rem; line-height: 1.6; }
 
 .webhooks-page__toolbar {
     display: flex;
@@ -40,14 +40,18 @@
     background: var(--card);
     color: var(--muted-foreground);
     border-radius: 999px;
-    min-height: 2.25rem;
-    padding: 0.375rem 0.875rem;
-    font-size: 0.8125rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.84rem;
+    font-weight: 600;
     cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
 }
 
 .webhooks-page__filter-chip:hover {
-    background: var(--secondary);
+    color: var(--foreground);
+    border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+    background: color-mix(in oklab, var(--brand-indigo-soft) 42%, var(--card));
 }
 
 .webhooks-page__filter-chip--active {
@@ -61,13 +65,35 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    border: 1px solid var(--destructive);
+    border: 1px solid color-mix(in oklab, var(--destructive) 40%, var(--border));
     border-radius: var(--radius);
-    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    background: color-mix(in oklab, var(--destructive) 7%, var(--card));
     color: var(--destructive);
 }
 
 .webhooks-page__error p {
     margin: 0;
     flex: 1;
+}
+
+@media (max-width: 600px) {
+    .webhooks-page__header {
+        align-items: flex-start;
+    }
+
+    .webhooks-page__header > .btn {
+        width: 100%;
+    }
+
+    .webhooks-page__toolbar {
+        align-items: stretch;
+    }
+
+    .webhooks-page__filters {
+        width: 100%;
+    }
+
+    .webhooks-page__filter-chip {
+        flex: 1 1 auto;
+    }
 }

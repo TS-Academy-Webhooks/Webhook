@@ -19,51 +19,53 @@ export function WebhookTable({ webhooks, pendingId, onToggle, onDeleteRequest })
     return (
         <>
             {/* Desktop table */}
-            <table className="webhook-table">
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>URL</th>
-                    <th>Events</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th aria-label="Actions" />
-                </tr>
-                </thead>
-                <tbody>
-                {webhooks.map((webhook) => (
-                    <tr key={webhook.id}>
-                        <td>
-                            <Link to={ROUTES.WEBHOOK_DETAILS(webhook.id)} className="webhook-table__name-link">
-                                {webhook.name}
-                            </Link>
-                        </td>
-                        <td className="webhook-table__url" title={webhook.url}>
-                            {webhook.url}
-                        </td>
-                        <td>
-                            <EventBadges events={webhook.events} />
-                        </td>
-                        <td>
-                            <WebhookStatus
-                                isActive={webhook.isActive}
-                                webhookName={webhook.name}
-                                pending={pendingId === webhook.id}
-                                onToggle={(next) => onToggle(webhook.id, next)}
-                            />
-                        </td>
-                        <td>{formatDate(webhook.createdAt)}</td>
-                        <td className="webhook-table__actions">
-                            <Link to={ROUTES.WEBHOOK_DETAILS(webhook.id)}>View</Link>
-                            <Link to={ROUTES.WEBHOOK_EDIT(webhook.id)}>Edit</Link>
-                            <button type="button" onClick={() => onDeleteRequest(webhook)}>
-                                Delete
-                            </button>
-                        </td>
+            <div className="webhook-table__scroll">
+                <table className="webhook-table">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>URL</th>
+                        <th>Events</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th aria-label="Actions" />
                     </tr>
-                ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {webhooks.map((webhook) => (
+                        <tr key={webhook.id}>
+                            <td>
+                                <Link to={ROUTES.WEBHOOK_DETAILS(webhook.id)} className="webhook-table__name-link">
+                                    {webhook.name}
+                                </Link>
+                            </td>
+                            <td className="webhook-table__url" title={webhook.url}>
+                                {webhook.url}
+                            </td>
+                            <td>
+                                <EventBadges events={webhook.events} />
+                            </td>
+                            <td>
+                                <WebhookStatus
+                                    isActive={webhook.isActive}
+                                    webhookName={webhook.name}
+                                    pending={pendingId === webhook.id}
+                                    onToggle={(next) => onToggle(webhook.id, next)}
+                                />
+                            </td>
+                            <td>{formatDate(webhook.createdAt)}</td>
+                            <td className="webhook-table__actions">
+                                <Link to={ROUTES.WEBHOOK_DETAILS(webhook.id)}>View</Link>
+                                <Link to={ROUTES.WEBHOOK_EDIT(webhook.id)}>Edit</Link>
+                                <button type="button" onClick={() => onDeleteRequest(webhook)}>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
 
             {/* Mobile stacked cards — same data, no horizontal scroll */}
             <div className="webhook-cards">
