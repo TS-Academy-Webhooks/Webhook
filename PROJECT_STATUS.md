@@ -23,7 +23,3 @@ API-key management and provider-backed email verification/password recovery are 
 Public registration creates customers only; admins are provisioned from private environment variables. The browser keeps short-lived access tokens in memory and uses an HttpOnly refresh cookie. Production must use HTTPS, strong non-example secrets, an exact configured origin, and safe webhook URL policy. Keep local webhook and demo-receiver options disabled in production unless intentionally required.
 
 Back up MongoDB before a deployment that runs legacy migrations. The backend migration guide documents transformed fields and any sign-in/API compatibility impact. Never commit `.env` files or bootstrap credentials.
-
-## Development references
-
-`davinci/` is the reference for the merged backend contract, compatibility behavior, migrations, and API docs. `chadman/` is the reference for full-platform screens and responsive UX; the production frontend remains Vite + React Router.
