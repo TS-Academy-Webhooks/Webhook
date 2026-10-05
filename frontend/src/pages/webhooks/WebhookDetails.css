@@ -39,7 +39,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     padding: 1.25rem;
-    box-shadow: var(--shadow-card);
 }
 
 .webhook-details__card h2 {

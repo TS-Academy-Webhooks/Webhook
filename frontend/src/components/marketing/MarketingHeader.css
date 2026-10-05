@@ -1,0 +1,122 @@
+.marketing-header {
+    display: flex;
+    width: min(100% - 64px, 1060px);
+    min-height: 82px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-inline: auto;
+    border-bottom: 1px solid var(--border);
+}
+
+.marketing-header__brand {
+    gap: 0.625rem;
+}
+
+.marketing-header__brand .brand-lockup__copy strong {
+    font-size: 1.1875rem;
+    letter-spacing: -0.04em;
+}
+
+.marketing-header__nav,
+.marketing-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.marketing-header__nav a,
+.marketing-header__signin {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 150ms ease;
+}
+
+.marketing-header__nav a:hover,
+.marketing-header__signin:hover {
+    color: var(--primary);
+}
+
+.marketing-header__button {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1.2rem;
+    border: 1px solid transparent;
+    border-radius: 0.65rem;
+    color: var(--primary-foreground);
+    background: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition: background-color 150ms ease;
+}
+
+.marketing-header__button:hover {
+    background: var(--brand-indigo-hover);
+}
+
+@media (max-width: 980px) {
+    .marketing-header {
+        width: min(100% - 40px, 600px);
+        min-height: 72px;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.25rem;
+        padding-block: 0.625rem;
+    }
+
+    .marketing-header__nav {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+        gap: 1.125rem;
+        overflow-x: auto;
+        padding: 2px 0;
+        scrollbar-width: thin;
+    }
+}
+
+@media (max-width: 480px) {
+    .marketing-header {
+        width: min(100% - 32px, 420px);
+        column-gap: 0.75rem;
+    }
+
+    .marketing-header__brand .brand-lockup__copy strong {
+        font-size: 1.0625rem;
+    }
+
+    .marketing-header__nav {
+        gap: 1rem;
+    }
+
+    .marketing-header__nav a,
+    .marketing-header__signin {
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .marketing-header__actions {
+        gap: 0.75rem;
+    }
+
+    .marketing-header__button {
+        min-height: 44px;
+        padding-inline: 0.75rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marketing-header__nav a,
+    .marketing-header__signin,
+    .marketing-header__button {
+        transition: none;
+    }
+}

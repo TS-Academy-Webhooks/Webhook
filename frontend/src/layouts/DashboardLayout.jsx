@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { BrandLockup } from "../components/BrandLockup";
 import { useAuth } from "../hooks/useAuth";
 import "./DashboardLayout.css";
 
@@ -140,10 +141,13 @@ export default function DashboardLayout() {
                 role={isMobile && sidebarOpen ? "dialog" : undefined}
                 aria-modal={isMobile && sidebarOpen ? "true" : undefined}
             >
-                <NavLink className="app-sidebar__brand" to="/dashboard">
-                    <span className="app-sidebar__brand-mark" aria-hidden="true">W</span>
-                    <span><strong>Waybridge</strong><small>Logistics workspace</small></span>
-                </NavLink>
+                <BrandLockup
+                    className="app-sidebar__brand"
+                    markSize="default"
+                    subtitle="Logistics workspace"
+                    to="/dashboard"
+                    ariaLabel="Waybridge dashboard"
+                />
 
                 <div className="app-sidebar__section-label">Workspace</div>
                 <nav className="app-sidebar__nav" aria-label="Primary navigation">

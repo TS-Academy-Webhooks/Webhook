@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { BrandLockup } from "../../components/BrandLockup";
+import { PasswordInput } from "../../components/common/PasswordInput";
 import { useAuth } from "../../hooks/useAuth";
 import { Input } from "../../components/common/Input";
 
@@ -32,7 +34,7 @@ export default function Login() {
         <main className="auth-page">
             <section className="auth-card">
                 <div className="auth-header">
-                    <div className="brand-mark">W</div>
+                    <BrandLockup className="auth-brand" markSize="large" />
 
                     <h1 className="auth-title">Welcome back</h1>
 
@@ -63,15 +65,14 @@ export default function Login() {
                             <label htmlFor="password">Password</label>
                             <Link to="/forgot-password">Password recovery unavailable</Link>
                         </div>
-
-                        <input
+                        <PasswordInput
                             id="password"
                             name="password"
-                            type="password"
                             autoComplete="current-password"
                             placeholder="Enter your password…"
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
+                            aria-label="Password"
                             required
                         />
                     </div>
@@ -87,8 +88,9 @@ export default function Login() {
 
                 <p className="auth-footer">
                     Don’t have an account?{" "}
-                    <Link to="/signup">Create an account</Link>
+                    <Link to="/signup">Create account</Link>
                 </p>
+                <Link className="auth-home-link" to="/">Back to home</Link>
             </section>
         </main>
     );

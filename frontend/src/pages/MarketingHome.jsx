@@ -1,25 +1,7 @@
 import { Link } from "react-router-dom";
+import { BrandMark } from "../components/BrandMark";
+import { MarketingHeader } from "../components/marketing/MarketingHeader";
 import "./MarketingHome.css";
-
-function BrandMark() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="brand-mark"
-      viewBox="0 0 40 40"
-      fill="none"
-    >
-      <rect width="40" height="40" rx="12" fill="currentColor" />
-      <path
-        d="M9 27V22a11 11 0 0 1 22 0v5M6 28h28M13 28v-4m14 4v-4"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function MarketingHome() {
   return (
@@ -28,29 +10,7 @@ function MarketingHome() {
         Skip to main content
       </a>
 
-      <header className="marketing-header">
-        <Link className="wordmark" to="/" aria-label="Waybridge home">
-          <BrandMark />
-          <span>Waybridge</span>
-        </Link>
-
-        <nav className="marketing-nav" aria-label="Main navigation">
-          <a href="#platform">Platform</a>
-          <a href="#workflow">How it works</a>
-          <Link to="/about">About</Link>
-          <Link to="/docs">API docs</Link>
-          <Link to="/track">Track</Link>
-        </nav>
-
-        <div className="header-actions">
-          <Link className="text-link" to="/login">
-            Sign in
-          </Link>
-          <Link className="button-link button-link-primary" to="/signup">
-            Get started
-          </Link>
-        </div>
-      </header>
+      <MarketingHeader />
 
       <main id="main-content">
         <section className="marketing-hero" aria-labelledby="hero-title">
@@ -63,7 +23,7 @@ function MarketingHome() {
             </p>
             <div className="hero-actions">
               <Link className="button-link button-link-primary" to="/signup">
-                Create your account
+                Create account
               </Link>
               <a className="button-link button-link-secondary" href="#platform">
                 Explore the platform
@@ -218,14 +178,14 @@ function MarketingHome() {
             </p>
           </div>
           <Link className="button-link button-link-light" to="/signup">
-            Get started
+            Create account
           </Link>
         </section>
       </main>
 
       <footer className="marketing-footer">
         <Link className="wordmark footer-wordmark" to="/">
-          <BrandMark />
+          <BrandMark size="compact" />
           <span>Waybridge</span>
         </Link>
         <p>Logistics webhook management and delivery visibility.</p>
@@ -234,7 +194,7 @@ function MarketingHome() {
           <Link to="/about">About</Link>
           <Link to="/docs">API docs</Link>
           <Link to="/track">Track a shipment</Link>
-          <Link to="/signup">Create an account</Link>
+          <Link to="/signup">Create account</Link>
         </div>
       </footer>
     </div>

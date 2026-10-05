@@ -23,15 +23,6 @@
     font-weight: 700;
 }
 
-.sidebar-brand .brand-mark {
-    width: 34px;
-    height: 34px;
-
-    margin: 0;
-
-    border-radius: 10px;
-}
-
 .sidebar-nav {
     display: flex;
     flex-direction: column;

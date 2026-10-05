@@ -15,7 +15,7 @@
     border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
-    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
 
 .btn:focus-visible {
@@ -32,12 +32,10 @@
 .btn--primary {
     background: var(--primary);
     color: var(--primary-foreground);
-    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
 .btn--primary:hover:not(:disabled):not([aria-disabled='true']) {
     background: var(--brand-indigo-hover);
-    box-shadow: 0 10px 22px color-mix(in oklab, var(--primary) 24%, transparent);
     transform: translateY(-1px);
 }
 

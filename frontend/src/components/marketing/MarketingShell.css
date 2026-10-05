@@ -38,19 +38,13 @@
     transform: translateY(0);
 }
 
-.public-marketing__header,
 .public-marketing__footer {
     display: flex;
-    width: min(100% - 48px, 1080px);
+    width: min(100% - 64px, 1060px);
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     margin-inline: auto;
-}
-
-.public-marketing__header {
-    min-height: 76px;
-    border-bottom: 1px solid var(--border);
 }
 
 .public-marketing__brand {
@@ -63,27 +57,17 @@
     text-decoration: none;
 }
 
-.public-marketing__brand span {
+.public-marketing__brand .waybridge-mark {
     display: grid;
-    width: 2rem;
-    height: 2rem;
     place-items: center;
-    border-radius: .65rem;
-    color: var(--primary-foreground);
-    background: var(--primary);
-    font-weight: 750;
 }
 
-.public-marketing__header nav,
-.public-marketing__actions,
 .public-marketing__footer nav {
     display: flex;
     align-items: center;
     gap: clamp(.65rem, 2vw, 1.5rem);
 }
 
-.public-marketing__header nav a,
-.public-marketing__actions a,
 .public-marketing__footer nav a {
     display: inline-flex;
     min-height: 44px;
@@ -94,24 +78,12 @@
     text-decoration: none;
 }
 
-.public-marketing__header a:hover,
 .public-marketing__footer a:hover {
     color: var(--brand-indigo-hover);
 }
 
-.public-marketing__actions .public-marketing__button {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    justify-content: center;
-    padding-inline: 1rem;
-    border-radius: .65rem;
-    color: var(--primary-foreground);
-    background: var(--primary);
-}
-
 .public-marketing__footer {
-    min-height: 82px;
+    min-height: 86px;
     flex-wrap: wrap;
     border-top: 1px solid var(--border);
 }
@@ -183,7 +155,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-large);
     background: var(--card);
-    box-shadow: var(--shadow-card);
 }
 
 .public-page__journey {
@@ -306,7 +277,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     background: var(--card);
-    box-shadow: var(--shadow-sm);
 }
 
 .public-page__toc a {
@@ -415,7 +385,6 @@
     color: var(--primary-foreground);
     background: var(--primary);
     font-weight: 650;
-    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
 .public-page__tracking-form button:hover:not(:disabled) {
@@ -435,7 +404,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-large);
     background: var(--card);
-    box-shadow: var(--shadow-card);
 }
 
 .public-page__tracking-result header {
@@ -491,7 +459,6 @@
     margin-top: .35rem;
     border-radius: 50%;
     background: var(--primary);
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 12%, var(--card));
     content: "";
 }
 
@@ -538,22 +505,9 @@
 }
 
 @media (max-width: 760px) {
-    .public-marketing__header,
     .public-marketing__footer,
     .public-page {
-        width: min(100% - 32px, 620px);
-    }
-
-    .public-marketing__header {
-        flex-wrap: wrap;
-        padding-block: .75rem;
-    }
-
-    .public-marketing__header nav {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        padding: .5rem 0 .15rem;
+        width: min(100% - 40px, 600px);
     }
 
     .public-page__hero,
@@ -572,31 +526,14 @@
 }
 
 @media (max-width: 480px) {
-    .public-marketing__header,
     .public-marketing__footer,
     .public-page {
-        width: min(100% - 24px, 420px);
+        width: min(100% - 32px, 420px);
     }
 
-    .public-marketing__header nav {
-        justify-content: flex-start;
-        overflow-x: auto;
-    }
-
-    .public-marketing__header nav a,
-    .public-marketing__actions a,
     .public-marketing__footer nav a {
         font-size: .75rem;
         white-space: nowrap;
-    }
-
-    .public-marketing__actions {
-        gap: .65rem;
-    }
-
-    .public-marketing__actions .public-marketing__button {
-        min-height: 44px;
-        padding-inline: .7rem;
     }
 
     .public-marketing__footer {
