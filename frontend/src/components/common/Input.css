@@ -22,7 +22,7 @@
     border: 1px solid var(--input);
     background: var(--card);
     color: var(--foreground);
-    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+    transition: border-color 150ms ease, background-color 150ms ease;
 }
 
 .input-field__control::placeholder {
@@ -33,7 +33,6 @@
     border-color: var(--ring);
     outline: 3px solid color-mix(in oklab, var(--ring) 25%, transparent);
     outline-offset: 1px;
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 12%, transparent);
 }
 
 .input-field__control--error {

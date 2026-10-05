@@ -21,7 +21,6 @@
     border-radius: var(--radius-large);
     color: var(--card-foreground);
     background: var(--card);
-    box-shadow: var(--shadow-card);
 }
 
 .auth-header {
@@ -29,18 +28,31 @@
     text-align: center;
 }
 
-.auth-header .brand-mark {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
+.auth-brand {
+    justify-content: center;
     margin: 0 auto 1rem;
-    border-radius: 0.85rem;
-    color: var(--primary-foreground);
-    background: var(--primary);
-    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 20%, transparent);
-    font-size: 1.15rem;
-    font-weight: 750;
+}
+
+.auth-brand .brand-lockup__copy strong {
+    color: var(--foreground);
+    font-size: 1rem;
+}
+
+.auth-home-link {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+    color: var(--muted-foreground);
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-home-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
 }
 
 .auth-title,
@@ -92,7 +104,7 @@
     color: var(--foreground);
     background: var(--card);
     font: inherit;
-    transition: border-color 150ms ease, box-shadow 150ms ease;
+    transition: border-color 150ms ease;
 }
 
 .form-group input::placeholder {
@@ -104,7 +116,6 @@
     border-color: var(--ring);
     outline: 3px solid color-mix(in oklab, var(--ring) 25%, transparent);
     outline-offset: 1px;
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 12%, transparent);
 }
 
 .primary-button {
@@ -117,16 +128,14 @@
     border-radius: 0.65rem;
     color: var(--primary-foreground);
     background: var(--primary);
-    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 18%, transparent);
     font: inherit;
     font-size: 0.9rem;
     font-weight: 650;
-    transition: background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+    transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
 
 .primary-button:hover:not(:disabled) {
     background: var(--brand-indigo-hover);
-    box-shadow: 0 10px 22px color-mix(in oklab, var(--primary) 24%, transparent);
 }
 
 .primary-button:active:not(:disabled) {

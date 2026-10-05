@@ -14,7 +14,6 @@
 
 .feature-page__action-link:hover {
     background: var(--brand-indigo-hover);
-    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 18%, transparent);
     transform: translateY(-1px);
 }
 
@@ -65,7 +64,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     background: var(--card);
-    box-shadow: var(--shadow-card);
 }
 
 .shipment-form__columns {
@@ -145,7 +143,6 @@
     margin-top: .32rem;
     border-radius: 50%;
     background: var(--primary);
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 12%, var(--card));
     content: "";
 }
 

@@ -187,7 +187,6 @@ code {
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     background: var(--card);
-    box-shadow: var(--shadow-card);
 }
 
 .feature-page__grid {
@@ -226,7 +225,6 @@ code {
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     background: var(--card);
-    box-shadow: var(--shadow-sm);
     overscroll-behavior-inline: contain;
     scrollbar-color: var(--muted-foreground) var(--muted);
 }

@@ -1,7 +1,7 @@
 .settings-page { display: grid; gap: 1.25rem; width: 100%; max-width: 58rem; }
 .settings-page__heading h1 { margin: 0; color: var(--foreground); font-size: clamp(1.8rem, 3vw, 2.2rem); font-weight: 700; letter-spacing: -.045em; }
 .settings-page__heading p { margin: .4rem 0 0; color: var(--muted-foreground); font-size: .9rem; line-height: 1.6; }
-.settings-card { overflow: hidden; padding: 1.25rem 1.35rem; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); box-shadow: var(--shadow-card); }
+.settings-card { overflow: hidden; padding: 1.25rem 1.35rem; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); }
 .settings-card__heading { display: flex; align-items: flex-start; gap: .85rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
 .settings-card__icon { display: grid; width: 2.25rem; height: 2.25rem; flex: 0 0 2.25rem; place-items: center; border: 1px solid color-mix(in oklab, var(--primary) 20%, var(--border)); border-radius: .65rem; color: var(--primary); background: color-mix(in oklab, var(--brand-indigo-soft) 60%, var(--card)); }
 .settings-card__heading h2 { margin: 0; color: var(--foreground); font-size: 1rem; font-weight: 700; letter-spacing: -.02em; }
@@ -17,7 +17,7 @@
 .settings-row p { max-width: 34rem; }
 .settings-switch { position: relative; width: 2.75rem; min-height: 2.75rem !important; flex: 0 0 2.75rem; padding: 0 !important; border: 0 !important; border-radius: .5rem !important; background: transparent !important; }
 .settings-switch::before { position: absolute; top: 50%; left: .25rem; width: 2.25rem; height: 1.35rem; transform: translateY(-50%); border: 1px solid var(--border); border-radius: 999px; background: var(--muted); transition: background-color .18s ease, border-color .18s ease; content: ""; }
-.settings-switch span { position: absolute; top: 50%; left: .4375rem; width: 1.05rem; height: 1.05rem; transform: translateY(-50%); border-radius: 50%; background: var(--primary-foreground); box-shadow: 0 1px 3px rgb(0 0 0 / .2); transition: transform .18s ease; }
+.settings-switch span { position: absolute; top: 50%; left: .4375rem; width: 1.05rem; height: 1.05rem; transform: translateY(-50%); border: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent); border-radius: 50%; background: var(--primary-foreground); transition: transform .18s ease; }
 .settings-switch--on::before { background: var(--primary); }
 .settings-switch--on::before { border-color: var(--primary); }
 .settings-switch--on span { transform: translate(1rem, -50%); }

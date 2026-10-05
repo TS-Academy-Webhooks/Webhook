@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/common/Button";
-import { Input } from "../../components/common/Input";
+import { PasswordInput } from "../../components/common/PasswordInput";
 import { useAuth } from "../../hooks/useAuth";
 import { changePassword } from "../../services/authService";
 import "./Settings.css";
@@ -166,9 +166,9 @@ export default function Settings() {
                 <form className="settings-password-form" onSubmit={handlePasswordSubmit}>
                     {passwordError && <p className="settings-message settings-message--error" role="alert">{passwordError}</p>}
                     {passwordNotice && <p className="settings-message" role="status" aria-live="polite">{passwordNotice}</p>}
-                    <Input id="settings-current-password" label="Current password" name="currentPassword" type="password" autoComplete="current-password" value={passwords.currentPassword} onChange={updatePassword} error={passwordFieldErrors.currentPassword} required />
-                    <Input id="settings-new-password" label="New password" name="newPassword" type="password" autoComplete="new-password" minLength={12} value={passwords.newPassword} onChange={updatePassword} error={passwordFieldErrors.newPassword} required />
-                    <Input id="settings-confirm-password" label="Confirm new password" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} value={passwords.confirmPassword} onChange={updatePassword} error={passwordFieldErrors.confirmPassword} required />
+                    <PasswordInput id="settings-current-password" label="Current password" name="currentPassword" autoComplete="current-password" value={passwords.currentPassword} onChange={updatePassword} error={passwordFieldErrors.currentPassword} required />
+                    <PasswordInput id="settings-new-password" label="New password" name="newPassword" autoComplete="new-password" minLength={12} value={passwords.newPassword} onChange={updatePassword} error={passwordFieldErrors.newPassword} required />
+                    <PasswordInput id="settings-confirm-password" label="Confirm new password" name="confirmPassword" autoComplete="new-password" minLength={12} value={passwords.confirmPassword} onChange={updatePassword} error={passwordFieldErrors.confirmPassword} required />
                     <Button type="submit" variant="primary" loading={savingPassword}>Change password</Button>
                 </form>
             </section>

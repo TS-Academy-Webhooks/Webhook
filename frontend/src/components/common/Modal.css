@@ -22,7 +22,6 @@
     max-height: min(90vh, 90dvh);
     overflow-y: auto;
     overscroll-behavior: contain;
-    box-shadow: 0 24px 60px rgb(15 23 42 / 22%);
 }
 
 .modal__dialog:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }

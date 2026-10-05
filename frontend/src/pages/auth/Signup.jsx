@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { BrandLockup } from "../../components/BrandLockup";
 import { useAuth } from "../../hooks/useAuth";
 import { Input } from "../../components/common/Input";
+import { PasswordInput } from "../../components/common/PasswordInput";
 import { validateSignup } from "../../utils/validateSignup";
 
 export default function Signup() {
@@ -56,8 +58,8 @@ export default function Signup() {
         <main className="auth-page">
             <section className="auth-card">
                 <div className="auth-header">
-                    <div className="brand-mark">W</div>
-                    <h1 className="auth-title">Create your account</h1>
+                    <BrandLockup className="auth-brand" markSize="large" />
+                    <h1 className="auth-title">Create account</h1>
                     <p className="auth-description">
                         Start managing your webhook events and delivery attempts.
                     </p>
@@ -91,11 +93,10 @@ export default function Signup() {
                         required
                     />
                     <div className="form-group">
-                        <Input
+                        <PasswordInput
                             id="password"
                             label="Password"
                             name="password"
-                            type="password"
                             autoComplete="new-password"
                             minLength={12}
                             placeholder="Create a password…"
@@ -106,11 +107,10 @@ export default function Signup() {
                         />
                         <small>Use at least 12 characters.</small>
                     </div>
-                    <Input
+                    <PasswordInput
                         id="confirmPassword"
                         label="Confirm password"
                         name="confirmPassword"
-                        type="password"
                         autoComplete="new-password"
                         minLength={12}
                         placeholder="Re-enter your password…"
@@ -126,6 +126,7 @@ export default function Signup() {
                 <p className="auth-footer">
                     Already have an account? <Link to="/login">Sign in</Link>
                 </p>
+                <Link className="auth-home-link" to="/">Back to home</Link>
             </section>
         </main>
     );
