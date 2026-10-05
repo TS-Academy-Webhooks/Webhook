@@ -9,6 +9,8 @@
     min-width: 0;
     flex: 1;
     overflow-wrap: anywhere;
+    color: var(--foreground);
+    background: color-mix(in oklab, var(--brand-indigo-soft) 45%, var(--card));
 }
 
 .demo-receiver-links {
@@ -22,6 +24,7 @@
     color: var(--primary);
     font-size: .84rem;
     font-weight: 600;
+    text-underline-offset: .18em;
 }
 
 .demo-receiver-profiles {
@@ -37,7 +40,7 @@
 
 .demo-receiver-profiles textarea {
     min-height: 10rem;
-    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-family: var(--font-mono-family);
     font-size: .78rem;
 }
 
@@ -49,9 +52,18 @@
     min-height: 2.75rem;
     padding: .6rem .75rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: .65rem;
     color: var(--foreground);
     background: var(--card);
+}
+
+.demo-receiver-profiles input:focus-visible,
+.demo-receiver-profiles textarea:focus-visible,
+.demo-receiver-filters input:focus-visible,
+.demo-receiver-filters select:focus-visible {
+    border-color: var(--ring);
+    outline: 3px solid color-mix(in oklab, var(--ring) 25%, transparent);
+    outline-offset: 1px;
 }
 
 .demo-receiver-profiles textarea {
@@ -81,6 +93,9 @@
 
 .demo-receiver-page details summary {
     color: var(--primary);
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
     cursor: pointer;
     font-size: .82rem;
 }

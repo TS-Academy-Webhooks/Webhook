@@ -1,165 +1,228 @@
 .auth-page {
-    min-height: 100vh;
+    position: relative;
     display: flex;
+    min-height: 100vh;
     align-items: center;
     justify-content: center;
-
-    padding: var(--spacing-md);
-    background: var(--background);
+    overflow: hidden;
+    padding: clamp(1rem, 5vw, 2rem);
+    background:
+        radial-gradient(circle at 88% 10%, color-mix(in oklab, var(--brand-indigo-soft) 82%, transparent), transparent 28rem),
+        var(--background);
 }
 
 .auth-card {
+    position: relative;
+    z-index: 1;
     width: 100%;
-    max-width: 430px;
-
-    background-color: var(--card);
-    color: var(--card-foreground);
-
+    max-width: 27rem;
+    padding: clamp(1.5rem, 5vw, 2.25rem);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-large);
+    color: var(--card-foreground);
+    background: var(--card);
+    box-shadow: var(--shadow-card);
 }
 
 .auth-header {
+    margin-bottom: 1.75rem;
     text-align: center;
-    margin-bottom: var(--spacing-xl);
 }
 
-.brand-mark {
-    width: 42px;
-    height: 42px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
+.auth-header .brand-mark {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
     margin: 0 auto 1rem;
-
-    background: var(--primary);
+    border-radius: 0.85rem;
     color: var(--primary-foreground);
-
-    border-radius: 10px;
-
-    font-weight: 700;
+    background: var(--primary);
+    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 20%, transparent);
+    font-size: 1.15rem;
+    font-weight: 750;
 }
 
-.auth-title {
-    margin-bottom: var(--spacing-sm);
-    font-size: 1.75rem;
+.auth-title,
+.auth-header h1 {
+    margin: 0 0 0.55rem;
+    color: var(--foreground);
+    font-size: clamp(1.65rem, 4vw, 1.9rem);
     font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1.15;
 }
 
 .auth-description {
+    max-width: 27rem;
+    margin: 0 auto;
     color: var(--muted-foreground);
     font-size: 0.9rem;
 }
 
-.auth-header h1 {
-    font-size: 1.6rem;
-    letter-spacing: -0.025em;
-    margin-bottom: 0.5rem;
-}
-
 .auth-header p {
     color: var(--muted-foreground);
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: 1.1rem;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 0.5rem;
 }
 
 .form-group label {
+    color: var(--foreground);
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .form-group input {
     width: 100%;
-
-    padding: 0.75rem 0.875rem;
-
-    background-color: var(--background);
-    color: var(--foreground);
-
+    min-height: 2.9rem;
+    padding: 0.7rem 0.85rem;
     border: 1px solid var(--input);
-    border-radius: var(--radius);
-
-    transition:
-        border-color 150ms ease,
-        box-shadow 150ms ease;
+    border-radius: 0.65rem;
+    color: var(--foreground);
+    background: var(--card);
+    font: inherit;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .form-group input::placeholder {
     color: var(--muted-foreground);
+    opacity: 1;
 }
 
 .form-group input:focus-visible {
     border-color: var(--ring);
-    outline: 3px solid var(--ring);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 3px oklch(0.708 0 0 / 20%);
+    outline: 3px solid color-mix(in oklab, var(--ring) 25%, transparent);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 12%, transparent);
 }
 
 .primary-button {
-    border: none;
-
-    padding: 0.75rem 1rem;
-
-    background: var(--primary);
+    display: inline-flex;
+    min-height: 2.9rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.65rem;
     color: var(--primary-foreground);
-
-    border-radius: calc(var(--radius) - 0.125rem);
-
-    font-weight: 500;
-
-    transition:
-        opacity 150ms ease,
-        transform 150ms ease;
+    background: var(--primary);
+    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 18%, transparent);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 650;
+    transition: background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
-.primary-button:hover {
-    opacity: 0.9;
+.primary-button:hover:not(:disabled) {
+    background: var(--brand-indigo-hover);
+    box-shadow: 0 10px 22px color-mix(in oklab, var(--primary) 24%, transparent);
 }
 
-.primary-button:active {
+.primary-button:active:not(:disabled) {
     transform: translateY(1px);
 }
 
 .primary-button:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.65;
+}
+
+.primary-button:focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 3px;
 }
 
 .form-label-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .form-label-row a {
-    color: var(--muted-foreground);
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    color: var(--primary);
     font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
 }
 
 .form-label-row a:hover {
-    color: var(--foreground);
+    color: var(--brand-indigo-hover);
+    text-decoration: underline;
 }
 
 .auth-footer {
-    margin-top: var(--spacing-lg);
-    text-align: center;
-
+    margin: 1.5rem 0 0;
     color: var(--muted-foreground);
     font-size: 0.875rem;
+    text-align: center;
+}
+
+.auth-footer a,
+.auth-card > a {
+    color: var(--primary);
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.auth-footer a:hover,
+.auth-card > a:hover {
+    color: var(--brand-indigo-hover);
+    text-decoration: underline;
+}
+
+.auth-card__error,
+.auth-card__notice {
+    margin: 0 0 1rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid color-mix(in oklab, var(--destructive) 35%, var(--border));
+    border-radius: 0.65rem;
+    color: var(--destructive);
+    background: color-mix(in oklab, var(--destructive) 7%, var(--card));
+    font-size: 0.85rem;
+}
+
+.auth-card__notice {
+    border-color: color-mix(in oklab, var(--primary) 30%, var(--border));
+    color: var(--foreground);
+    background: color-mix(in oklab, var(--brand-indigo-soft) 65%, var(--card));
+}
+
+.auth-form small {
+    color: var(--muted-foreground);
+    font-size: 0.78rem;
+}
+
+@media (max-width: 420px) {
+    .auth-page {
+        align-items: flex-start;
+        padding: max(1rem, env(safe-area-inset-top)) 0.85rem max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .auth-card {
+        margin-block: auto;
+        padding: 1.35rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .form-group input,
+    .primary-button {
+        transition: none;
+    }
 }

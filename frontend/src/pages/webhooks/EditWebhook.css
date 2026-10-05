@@ -1,14 +1,15 @@
 /* src/pages/webhooks/EditWebhook.css */
 
 .edit-webhook-page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    display: grid;
+    gap: 1.35rem;
 }
 
 .edit-webhook-page__header h1 {
-    font-size: 1.25rem;
-    font-weight: 600;
+    color: var(--foreground);
+    font-size: clamp(1.8rem, 3vw, 2.25rem);
+    font-weight: 700;
+    letter-spacing: -.045em;
     margin: 0 0 0.375rem;
 }
 
@@ -16,7 +17,8 @@
     font-size: 0.875rem;
     color: var(--muted-foreground);
     margin: 0;
-    max-width: 32rem;
+    max-width: 40rem;
+    line-height: 1.6;
 }
 
 .edit-webhook-page__error {
@@ -24,9 +26,9 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    border: 1px solid var(--destructive);
+    border: 1px solid color-mix(in oklab, var(--destructive) 40%, var(--border));
     border-radius: var(--radius);
-    background: color-mix(in oklab, var(--destructive) 8%, transparent);
+    background: color-mix(in oklab, var(--destructive) 7%, var(--card));
     color: var(--destructive);
 }
 

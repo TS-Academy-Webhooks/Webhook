@@ -4,7 +4,7 @@
     align-items: center;
     justify-content: center;
     padding: .55rem .9rem;
-    border-radius: var(--radius);
+    border-radius: 0.65rem;
     color: var(--primary-foreground);
     background: var(--primary);
     font-size: .85rem;
@@ -13,7 +13,9 @@
 }
 
 .feature-page__action-link:hover {
-    filter: brightness(.95);
+    background: var(--brand-indigo-hover);
+    box-shadow: 0 8px 18px color-mix(in oklab, var(--primary) 18%, transparent);
+    transform: translateY(-1px);
 }
 
 .shipment-toolbar label {
@@ -28,20 +30,23 @@
     border-radius: 999px;
     color: var(--muted-foreground);
     background: var(--muted);
+    border: 1px solid var(--border);
     font-size: .75rem;
     font-weight: 650;
     white-space: nowrap;
 }
 
 .shipment-status--delivered {
-    color: #16644b;
-    background: color-mix(in oklab, #2c9b6f 14%, var(--card));
+    color: var(--success);
+    background: color-mix(in oklab, var(--success) 12%, var(--card));
+    border-color: color-mix(in oklab, var(--success) 28%, var(--border));
 }
 
 .shipment-status--delivery_failed,
 .shipment-status--cancelled {
     color: var(--destructive);
     background: color-mix(in oklab, var(--destructive) 12%, var(--card));
+    border-color: color-mix(in oklab, var(--destructive) 28%, var(--border));
 }
 
 .shipment-status--out_for_delivery,
@@ -50,6 +55,7 @@
 .shipment-status--picked_up {
     color: var(--primary);
     background: color-mix(in oklab, var(--primary) 10%, var(--card));
+    border-color: color-mix(in oklab, var(--primary) 24%, var(--border));
 }
 
 .shipment-form {
@@ -57,8 +63,9 @@
     max-width: 46rem;
     padding: 1.25rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-card);
     background: var(--card);
+    box-shadow: var(--shadow-card);
 }
 
 .shipment-form__columns {
@@ -114,6 +121,8 @@
 .shipment-details__actions a {
     color: var(--primary);
     font-size: .82rem;
+    font-weight: 600;
+    text-underline-offset: .2em;
 }
 
 .shipment-timeline {
@@ -136,6 +145,7 @@
     margin-top: .32rem;
     border-radius: 50%;
     background: var(--primary);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 12%, var(--card));
     content: "";
 }
 

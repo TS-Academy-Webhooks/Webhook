@@ -19,18 +19,18 @@
     top: 50%;
     left: 50%;
     width: 2.25rem;
-    height: 1.25rem;
+    height: 1.35rem;
     transform: translate(-50%, -50%);
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: var(--muted);
+    background: color-mix(in oklab, var(--muted-foreground) 45%, var(--card));
     content: "";
     transition: background-color .15s ease, border-color .15s ease;
 }
 
 .toggle:focus-visible {
     outline: 3px solid var(--ring);
-    outline-offset: 1px;
+    outline-offset: 3px;
 }
 
 .toggle:disabled {
@@ -51,10 +51,11 @@
     position: absolute;
     top: calc(50% - .5625rem);
     left: .3125rem;
-    width: 1rem;
-    height: 1rem;
+    width: 1.05rem;
+    height: 1.05rem;
     border-radius: 50%;
-    background: var(--card);
+    background: var(--primary-foreground);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
     transition: transform .15s ease;
 }
 

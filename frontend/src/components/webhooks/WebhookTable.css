@@ -1,22 +1,31 @@
 /* src/components/webhooks/WebhookTable.css */
 
+.webhook-table__scroll {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
+    overscroll-behavior-inline: contain;
+}
+
 .webhook-table {
     width: 100%;
+    min-width: 760px;
     border-collapse: collapse;
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
 }
 
 .webhook-table th {
     text-align: left;
     font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.07em;
     color: var(--muted-foreground);
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1rem;
+    background: color-mix(in oklab, var(--brand-indigo-soft) 42%, var(--card));
     border-bottom: 1px solid var(--border);
+    white-space: nowrap;
 }
 
 .webhook-table td {
@@ -24,6 +33,11 @@
     border-bottom: 1px solid var(--border);
     font-size: 0.875rem;
     vertical-align: middle;
+    color: var(--foreground);
+}
+
+.webhook-table tbody tr:hover {
+    background: color-mix(in oklab, var(--brand-indigo-soft) 25%, var(--card));
 }
 
 .webhook-table tr:last-child td {
@@ -32,35 +46,40 @@
 
 .webhook-table__name-link {
     color: var(--foreground);
-    font-weight: 500;
+    font-weight: 650;
     text-decoration: none;
 }
 
 .webhook-table__name-link:hover {
+    color: var(--primary);
     text-decoration: underline;
 }
 
 .webhook-table__url {
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: monospace;
+    max-width: 16rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-family: var(--font-mono-family);
     color: var(--muted-foreground);
 }
 
 .webhook-table__actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.35rem;
     font-size: 0.8125rem;
     white-space: nowrap;
 }
 
 .webhook-table__actions a,
 .webhook-table__actions button {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.45rem;
     background: none;
     border: none;
-    padding: 0;
     color: var(--primary);
     cursor: pointer;
     text-decoration: none;
@@ -76,13 +95,21 @@
     text-decoration: underline;
 }
 
+.webhook-table__actions a:hover {
+    background: color-mix(in oklab, var(--brand-indigo-soft) 55%, var(--card));
+}
+
+.webhook-table__actions button:hover {
+    background: color-mix(in oklab, var(--destructive) 9%, var(--card));
+}
+
 /* Mobile cards are hidden by default; table is hidden below the breakpoint */
 .webhook-cards {
     display: none;
 }
 
-@media (max-width: 768px) {
-    .webhook-table {
+@media (max-width: 900px) {
+    .webhook-table__scroll {
         display: none;
     }
 
@@ -95,7 +122,7 @@
     .webhook-card {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: var(--radius);
+        border-radius: var(--radius-card);
         padding: 1rem;
         display: flex;
         flex-direction: column;
@@ -110,12 +137,12 @@
     }
 
     .webhook-card__url {
-        font-family: monospace;
+        min-width: 0;
+        font-family: var(--font-mono-family);
         font-size: 0.8125rem;
         color: var(--muted-foreground);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
         margin: 0;
     }
 

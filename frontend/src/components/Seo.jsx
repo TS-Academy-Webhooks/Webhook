@@ -55,27 +55,37 @@ function updateStructuredData(structuredData) {
   }
 }
 
-function updateThemeColor(isPublicPage) {
+function updateThemeColor() {
   let tag = document.head.querySelector('meta[name="theme-color"]');
   if (!tag) {
     tag = document.createElement("meta");
     tag.name = "theme-color";
     document.head.append(tag);
   }
-  tag.content = isPublicPage || !document.documentElement.classList.contains("dark")
-    ? "#f8faff"
-    : "#141820";
+  tag.content = document.documentElement.classList.contains("dark") ? "#141820" : "#f8faff";
+}
+
+function applySavedTheme() {
+  try {
+    document.documentElement.classList.toggle(
+      "dark",
+      window.localStorage.getItem("webhook-theme") === "dark",
+    );
+  } catch {
+    // Keep the default light theme when browser storage is unavailable.
+  }
 }
 
 function Seo() {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    applySavedTheme();
     const siteUrl =
       import.meta.env.VITE_SITE_URL ||
       (import.meta.env.DEV ? window.location.origin : DEFAULT_SITE_URL);
     const metadata = getPageMetadata(pathname, siteUrl);
-    updateThemeColor(metadata.indexable);
+    updateThemeColor();
 
     document.title = metadata.title;
     updateMeta("name", "description", metadata.description);
