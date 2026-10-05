@@ -21,6 +21,7 @@ router.post(
   body("origin").trim().notEmpty().withMessage("Origin is required"),
   body("destination").trim().notEmpty().withMessage("Destination is required"),
   body("amount").isFloat({ min: 0 }).withMessage("Amount must be zero or greater").toFloat(),
+  body("note").optional().isString().trim().isLength({ max: 500 }).withMessage("Note must be 500 characters or fewer"),
   validateRequest,
   createShipment
 );
@@ -49,6 +50,7 @@ router.patch(
   authorizeRoles("admin"),
   param("id").isMongoId().withMessage("Invalid shipment ID"),
   body("status").isIn(SHIPMENT_STATUSES).withMessage("Invalid shipment status"),
+  body("note").optional().isString().trim().isLength({ max: 500 }).withMessage("Note must be 500 characters or fewer"),
   validateRequest,
   updateShipmentStatus
 );

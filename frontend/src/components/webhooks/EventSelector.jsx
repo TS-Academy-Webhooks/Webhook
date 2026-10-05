@@ -1,5 +1,6 @@
 // src/components/webhooks/EventSelector.jsx
-import { WEBHOOK_EVENTS } from '../../constants/webhookEvents';
+import { useId } from 'react';
+import { SHIPMENT_EVENT_VALUES, WEBHOOK_EVENTS } from '../../constants/webhookEvents';
 import './EventSelector.css';
 
 /**
@@ -8,7 +9,8 @@ import './EventSelector.css';
  * @param {string} [error]
  */
 export function EventSelector({ selected, onChange, error }) {
-    const allSelected = selected.length === WEBHOOK_EVENTS.length;
+    const errorId = useId();
+    const allSelected = SHIPMENT_EVENT_VALUES.every((event) => selected.includes(event));
 
     const toggle = (value) => {
         if (selected.includes(value)) {
@@ -19,13 +21,11 @@ export function EventSelector({ selected, onChange, error }) {
     };
 
     const toggleAll = () => {
-        onChange(allSelected ? [] : WEBHOOK_EVENTS.map((e) => e.value));
+        onChange(allSelected ? selected.filter((event) => event === '*') : [...SHIPMENT_EVENT_VALUES]);
     };
 
-    const errorId = 'event-selector-error';
-
     return (
-        <fieldset className="event-selector" aria-describedby={error ? errorId : undefined}>
+        <fieldset id="webhook-events" tabIndex={-1} className="event-selector" aria-describedby={error ? `${errorId}-error` : undefined}>
             <legend className="event-selector__legend">Events</legend>
             <div className="event-selector__header">
                 <button type="button" className="event-selector__select-all" onClick={toggleAll}>
@@ -38,16 +38,21 @@ export function EventSelector({ selected, onChange, error }) {
                     <label key={event.value} className="event-selector__option">
                         <input
                             type="checkbox"
+                            name="events"
+                            value={event.value}
                             checked={selected.includes(event.value)}
                             onChange={() => toggle(event.value)}
                         />
-                        {event.label}
+                        <span>
+                            <strong>{event.label}</strong>
+                            <small>{event.description}</small>
+                        </span>
                     </label>
                 ))}
             </div>
 
             {error && (
-                <p id={errorId} className="event-selector__error" role="alert">
+                <p id={`${errorId}-error`} className="event-selector__error" role="alert">
                     {error}
                 </p>
             )}

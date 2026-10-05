@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { Input } from "../../components/common/Input";
 
 export default function Login() {
     const { login } = useAuth();
@@ -10,6 +11,7 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const notice = location.state?.notice;
 
     async function handleSubmit(event) {
         event.preventDefault();
@@ -18,7 +20,7 @@ export default function Login() {
 
         try {
             await login({ email, password });
-            navigate(location.state?.from?.pathname || "/webhooks", { replace: true });
+            navigate(location.state?.from?.pathname || "/dashboard", { replace: true });
         } catch (requestError) {
             setError(requestError.message);
         } finally {
@@ -39,37 +41,35 @@ export default function Login() {
                     </p>
                 </div>
 
+                {notice && <p className="auth-card__notice" role="status" aria-live="polite">{notice}</p>}
                 {error && <p className="auth-card__error" role="alert">{error}</p>}
 
                 <form onSubmit={handleSubmit} className="auth-form">
-                    <div className="form-group">
-                        <label htmlFor="email">Email address</label>
-
-                        <input
-                            id="email"
-                            type="email"
-                            autoComplete="email"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
-                            required
-                        />
-                    </div>
+                    <Input
+                        id="email"
+                        label="Email address"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        spellCheck={false}
+                        placeholder="name@example.com…"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        required
+                    />
 
                     <div className="form-group">
                         <div className="form-label-row">
                             <label htmlFor="password">Password</label>
-
-                            <Link to="/forgot-password">
-                                Forgot password?
-                            </Link>
+                            <Link to="/forgot-password">Password recovery unavailable</Link>
                         </div>
 
                         <input
                             id="password"
+                            name="password"
                             type="password"
                             autoComplete="current-password"
-                            placeholder="Enter your password"
+                            placeholder="Enter your password…"
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                             required
@@ -81,12 +81,12 @@ export default function Login() {
                         className="primary-button"
                         disabled={submitting}
                     >
-                        {submitting ? "Signing in..." : "Sign in"}
+                        {submitting ? "Signing in…" : "Sign in"}
                     </button>
                 </form>
 
                 <p className="auth-footer">
-                    Don't have an account?{" "}
+                    Don’t have an account?{" "}
                     <Link to="/signup">Create an account</Link>
                 </p>
             </section>

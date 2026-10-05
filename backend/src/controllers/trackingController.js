@@ -3,7 +3,8 @@ const AppError = require("../utils/AppError");
 const { sendSuccess } = require("../utils/apiResponse");
 
 exports.trackShipment = async (req, res) => {
-  const shipment = await Shipment.findOne({ trackingNumber: req.params.trackingNumber });
+  const trackingNumber = req.params.trackingNumber.trim().toUpperCase();
+  const shipment = await Shipment.findOne({ trackingNumber });
   if (!shipment) {
     throw new AppError("Shipment not found", 404);
   }
@@ -13,7 +14,13 @@ exports.trackShipment = async (req, res) => {
     status: shipment.status,
     origin: shipment.origin,
     destination: shipment.destination,
-    timeline: shipment.statusHistory.map(({ status, timestamp }) => ({ status, timestamp })),
+    timeline: shipment.statusHistory.map(({ status, timestamp, note }) => ({
+      status,
+      at: timestamp,
+      timestamp,
+      ...(note ? { note } : {}),
+    })),
+    lastUpdate: shipment.updatedAt,
     lastUpdated: shipment.updatedAt,
   });
 };

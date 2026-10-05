@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
+const Delivery = require("../models/Delivery");
 const Event = require("../models/event");
 const AppError = require("../utils/AppError");
-const { sendSuccess } = require("../utils/apiResponse");
+const { paginatedData, sendSuccess } = require("../utils/apiResponse");
 
 exports.getEvents = async (req, res) => {
   const page = Number(req.query.page || 1);
@@ -9,6 +10,9 @@ exports.getEvents = async (req, res) => {
   const filter = {};
   if (req.query.type) {
     filter.type = req.query.type;
+  }
+  if (req.query.shipmentId) {
+    filter.shipmentId = req.query.shipmentId;
   }
   if (req.query.search) {
     const search = req.query.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -23,10 +27,11 @@ exports.getEvents = async (req, res) => {
     Event.countDocuments(filter),
   ]);
 
-  return sendSuccess(res, "Events retrieved successfully", {
-    events,
-    pagination: { page, limit, totalItems, totalPages: Math.ceil(totalItems / limit) },
-  });
+  return sendSuccess(
+    res,
+    "Events retrieved successfully",
+    paginatedData(events, page, limit, totalItems, "events")
+  );
 };
 
 exports.getEvent = async (req, res) => {
@@ -38,5 +43,13 @@ exports.getEvent = async (req, res) => {
     throw new AppError("Event not found", 404);
   }
 
-  return sendSuccess(res, "Event retrieved successfully", event);
+  const eventData = event.toObject({ virtuals: true });
+  const deliveries = await Delivery.find({ eventId: event._id })
+    .populate("webhookId", "name url")
+    .sort({ createdAt: -1 });
+  return sendSuccess(res, "Event retrieved successfully", {
+    ...eventData,
+    event: eventData,
+    deliveries,
+  });
 };

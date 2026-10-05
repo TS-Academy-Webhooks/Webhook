@@ -43,7 +43,7 @@ async function createShipment(shipmentData) {
   });
 }
 
-async function changeShipmentStatus(id, nextStatus) {
+async function changeShipmentStatus(id, nextStatus, note) {
   const shipment = await Shipment.findById(id);
   if (!shipment) {
     throw new AppError("Shipment not found", 404);
@@ -55,7 +55,11 @@ async function changeShipmentStatus(id, nextStatus) {
 
   const timestamp = new Date();
   shipment.status = nextStatus;
-  shipment.statusHistory.push({ status: nextStatus, timestamp });
+  shipment.statusHistory.push({
+    status: nextStatus,
+    timestamp,
+    ...(note ? { note } : {}),
+  });
   await shipment.save();
   return shipment;
 }

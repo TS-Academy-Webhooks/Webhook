@@ -1,172 +1,98 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { getDeliveries } from "../../services/deliveryService";
+import { Link, useSearchParams, useParams } from "react-router-dom";
+import { getWebhookDeliveries } from "../../services/webhookService";
+import { Pagination } from "../../components/common/Pagination";
+import { Loader } from "../../components/common/Loader";
+import { EmptyState } from "../../components/common/EmptyState";
+import { Badge } from "../../components/common/Badge";
+import { formatDate } from "../../utils/formatDate";
+import { formatEventType } from "../../utils/formatEventType";
 
-function statusStyles(status) {
-  switch (status) {
-    case "success":
-      return "bg-primary/10 text-primary";
-    case "failed":
-      return "bg-destructive/10 text-destructive";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
+const DELIVERY_STATUSES = ["pending", "success", "failed"];
+
+function statusVariant(status) {
+    if (status === "success") return "success";
+    if (status === "failed") return "destructive";
+    return "neutral";
 }
 
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString() : "—";
+export default function DeliveryHistory() {
+    const { webhookId } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = Math.max(1, Number(searchParams.get("page")) || 1);
+    const requestedStatus = searchParams.get("status") || "";
+    const status = DELIVERY_STATUSES.includes(requestedStatus) ? requestedStatus : "";
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        let alive = true;
+        setLoading(true);
+        setError("");
+        getWebhookDeliveries(webhookId, {
+            page,
+            limit: 20,
+            status: DELIVERY_STATUSES.includes(status) ? status : undefined,
+        })
+            .then((data) => alive && setResult(data))
+            .catch((requestError) => alive && setError(requestError.message))
+            .finally(() => alive && setLoading(false));
+        return () => { alive = false; };
+    }, [page, status, webhookId]);
+
+    function updateQuery(key, value) {
+        const next = new URLSearchParams(searchParams);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        if (key !== "page") next.delete("page");
+        setSearchParams(next);
+    }
+
+    return (
+        <section className="feature-page">
+            <header className="feature-page__header">
+                <div>
+                    <p><Link to={`/webhooks/${encodeURIComponent(webhookId)}`}>Webhook details</Link></p>
+                    <h1>Delivery history</h1>
+                    <p className="feature-page__muted">Delivery summaries for webhook <code>{webhookId}</code>.</p>
+                </div>
+                <Link to="/deliveries">All deliveries</Link>
+            </header>
+            <div className="feature-page__toolbar">
+                <label>
+                    <span className="sr-only">Filter delivery status</span>
+                    <select value={status} onChange={(event) => updateQuery("status", event.target.value)}>
+                        <option value="">All statuses</option>
+                        {DELIVERY_STATUSES.map((value) => <option value={value} key={value}>{value[0].toUpperCase() + value.slice(1)}</option>)}
+                    </select>
+                </label>
+            </div>
+            {error && <p role="alert" className="feature-page__error">{error}</p>}
+            {loading ? <Loader label="Loading delivery history" showLabel /> : result?.items.length ? (
+                <>
+                    <div className="feature-page__table">
+                        <table>
+                            <thead><tr><th scope="col">Delivery</th><th scope="col">Event</th><th scope="col">Status</th><th scope="col">Attempts</th><th scope="col">HTTP</th><th scope="col">Last attempt</th></tr></thead>
+                            <tbody>
+                                {result.items.map((delivery) => (
+                                    <tr key={delivery.id}>
+                                        <td><Link to={`/deliveries/${encodeURIComponent(delivery.id)}`}>{delivery.id}</Link></td>
+                                        <td>{delivery.event?.eventId ?? formatEventType(delivery.event?.type ?? "Event")}</td>
+                                        <td><Badge variant={statusVariant(delivery.status)}>{delivery.status}</Badge></td>
+                                        <td>{delivery.attemptCount}</td>
+                                        <td>{delivery.httpStatus ?? "—"}</td>
+                                        <td>{formatDate(delivery.attemptedAt ?? delivery.createdAt, { withTime: true })}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <Pagination pagination={result.pagination} onPageChange={(nextPage) => updateQuery("page", String(nextPage))} />
+                </>
+            ) : (
+                <EmptyState title={status ? "No deliveries match this filter" : "No delivery summaries yet"} description="Matching shipment events will appear here after they are sent to this webhook." />
+            )}
+        </section>
+    );
 }
-
-function DeliveryHistory() {
-  const { webhookId } = useParams();
-  const navigate = useNavigate();
-  const [deliveries, setDeliveries] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [currentWebhookId, setCurrentWebhookId] = useState(webhookId);
-
-  // When the webhook changes, go back to page 1 and show the loading state
-  if (currentWebhookId !== webhookId) {
-    setCurrentWebhookId(webhookId);
-    setPage(1);
-    setLoading(true);
-    setError("");
-    setDeliveries([]);
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    getDeliveries(page, { webhookId })
-      .then((data) => {
-        if (cancelled) return;
-        setDeliveries(data.items);
-        setPagination(data.pagination);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        if (err.status === 401) {
-          navigate("/");
-          return;
-        }
-        setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [webhookId, page, navigate]);
-
-  const goToPage = (p) => {
-    setLoading(true);
-    setError("");
-    setPage(p);
-  };
-
-  const webhookName = deliveries[0]?.webhook?.name;
-
-  return (
-    <div className="p-6 bg-background text-foreground min-h-screen">
-      <Link
-        to="/deliveries"
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
-        ← Back to Deliveries
-      </Link>
-
-      <div className="mt-4 mb-6">
-        <h1 className="text-2xl font-semibold">
-          {webhookName ? `${webhookName} history` : "Delivery history"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {pagination.total} deliveries
-        </p>
-      </div>
-
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted/50 text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-medium">Event Type</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Attempts</th>
-              <th className="px-4 py-3 font-medium">Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
-                  Loading history...
-                </td>
-              </tr>
-            )}
-            {!loading && error && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-destructive">
-                  {error}
-                </td>
-              </tr>
-            )}
-            {!loading && !error && deliveries.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
-                  No deliveries found for this webhook.
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              !error &&
-              deliveries.map((d) => (
-                <tr
-                  key={d.id}
-                  onClick={() => navigate(`/deliveries/${d.id}`)}
-                  className="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
-                >
-                  <td className="px-4 py-3">{d.event?.type ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles(
-                        d.status
-                      )}`}
-                    >
-                      {d.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{d.attemptCount}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(d.createdAt)}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between mt-4 text-sm">
-        <button
-          onClick={() => goToPage(page - 1)}
-          disabled={page <= 1 || loading}
-          className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="text-muted-foreground">
-          Page {pagination.page} of {pagination.totalPages}
-        </span>
-        <button
-          onClick={() => goToPage(page + 1)}
-          disabled={page >= pagination.totalPages || loading}
-          className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export default DeliveryHistory;

@@ -215,3 +215,14 @@
     gap: var(--spacing-md);
   }
 }
+
+.dashboard-page__header { margin-bottom: 0; }
+.dashboard-page__actions { display: flex; flex-wrap: wrap; gap: .65rem; }
+.dashboard-page__actions a { display: inline-flex; min-height: 2.75rem; align-items: center; padding: .55rem .85rem; border-radius: var(--radius); color: var(--primary-foreground); background: var(--primary); font-size: .82rem; font-weight: 600; text-decoration: none; }
+.dashboard-page__actions a + a { border: 1px solid var(--border); color: var(--foreground); background: var(--card); }
+.dashboard-page__actions a:hover { filter: brightness(.95); }
+.dashboard-recent__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.dashboard-recent__header p { margin-top: .35rem; }
+.dashboard-recent__header a { color: var(--primary); font-size: .82rem; font-weight: 600; }
+.dashboard-page__links { padding: .25rem 0; }
+@media (max-width: 640px) { .dashboard-page__actions { width: 100%; } .dashboard-page__actions a { flex: 1 1 auto; justify-content: center; } .dashboard-recent__header { flex-wrap: wrap; } }

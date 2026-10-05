@@ -14,6 +14,7 @@ const {
 function toPublicUser(user) {
   return {
     id: user._id,
+    _id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
@@ -40,6 +41,7 @@ exports.register = async (req, res, next) => {
     return sendSuccess(res, "Account registered successfully", {
       user: toPublicUser(user),
       accessToken,
+      token: accessToken,
     }, 201);
   } catch (error) {
     return next(error);
@@ -62,7 +64,11 @@ exports.login = async (req, res, next) => {
     }
 
     const accessToken = await startSession(user, req, res);
-    return sendSuccess(res, "Login successful", { user: toPublicUser(user), accessToken });
+    return sendSuccess(res, "Login successful", {
+      user: toPublicUser(user),
+      accessToken,
+      token: accessToken,
+    });
   } catch (error) {
     return next(error);
   }
@@ -79,6 +85,7 @@ exports.refresh = async (req, res, next) => {
     return sendSuccess(res, "Access token refreshed", {
       user: toPublicUser(session.user),
       accessToken: session.accessToken,
+      token: session.accessToken,
     });
   } catch (error) {
     return next(error);
@@ -120,7 +127,6 @@ exports.changePassword = async (req, res, next) => {
 };
 
 exports.me = (req, res) => {
-  return sendSuccess(res, "Current user retrieved successfully", {
-    user: toPublicUser(req.user),
-  });
+  const user = toPublicUser(req.user);
+  return sendSuccess(res, "Current user retrieved successfully", { ...user, user });
 };

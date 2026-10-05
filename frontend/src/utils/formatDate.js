@@ -23,7 +23,7 @@ export function formatDate(input, { withTime = false } = {}) {
         ...(withTime && { hour: 'numeric', minute: '2-digit' }),
     };
 
-    return date.toLocaleString(undefined, options);
+    return new Intl.DateTimeFormat(undefined, options).format(date);
 }
 
 // For delivery logs / attempt timestamps, where the time is the point.

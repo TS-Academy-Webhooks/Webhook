@@ -14,7 +14,6 @@ function diffPayload(original, next) {
     const diff = {};
     if (next.name !== original.name) diff.name = next.name;
     if (next.url !== original.url) diff.url = next.url;
-    if ((next.description ?? '') !== (original.description ?? '')) diff.description = next.description;
     if (next.isActive !== original.isActive) diff.isActive = next.isActive;
 
     const sameEvents =
@@ -75,7 +74,7 @@ export default function EditWebhook() {
             </div>
 
             <WebhookForm
-                initialValues={{ name: webhook.name, url: webhook.url, description: webhook.description, isActive: webhook.isActive, events: webhook.events }}
+                initialValues={{ name: webhook.name, url: webhook.url, isActive: webhook.isActive, events: webhook.events }}
                 onSubmit={handleSubmit}
                 onCancel={() => navigate(ROUTES.WEBHOOK_DETAILS(id))}
                 submitLabel="Save changes"

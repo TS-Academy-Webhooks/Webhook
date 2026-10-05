@@ -1,22 +1,128 @@
-import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { getEvents, getEventsForShipment } from '../services/eventService';
-import { WEBHOOK_EVENT_VALUES } from '../constants/webhookEvents';
-import { formatDate } from '../utils/formatDate';
-import { formatEventType } from '../utils/formatEventType';
-import { Pagination } from '../components/common/Pagination';
-import { Loader } from '../components/common/Loader';
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { getEvents } from "../services/eventService";
+import { SHIPMENT_EVENT_VALUES } from "../constants/webhookEvents";
+import { formatDate } from "../utils/formatDate";
+import { formatEventType } from "../utils/formatEventType";
+import { Pagination } from "../components/common/Pagination";
+import { Loader } from "../components/common/Loader";
+import { EmptyState } from "../components/common/EmptyState";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+
+const EVENT_FILTERS = [...SHIPMENT_EVENT_VALUES, "webhook.test"];
 
 export default function Events() {
-    const [params, setParams] = useSearchParams(); const shipmentId = params.get('shipmentId');
-    const [type, setType] = useState(''); const [search, setSearch] = useState(''); const [page, setPage] = useState(1);
-    const [data, setData] = useState({ items: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 1 } }); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
-    useEffect(() => { let alive = true; setLoading(true); setError('');
-        const load = shipmentId ? getEventsForShipment(shipmentId).then((items) => ({ items: items.filter((e) => (!type || e.type === type) && (!search || e.eventId?.toLowerCase().includes(search.toLowerCase()))), pagination: { page, limit: 10, total: items.length, totalPages: Math.max(1, Math.ceil(items.length / 10)) } })) : getEvents({ page, limit: 10, type: type || undefined, search: search || undefined });
-        load.then((value) => alive && setData(shipmentId ? { ...value, items: value.items.slice((page - 1) * 10, page * 10) } : value)).catch((e) => alive && setError(e.message)).finally(() => alive && setLoading(false)); return () => { alive = false; };
-    }, [shipmentId, page, type, search]);
-    return <section className="feature-page"><header className="feature-page__header"><div><h1>Webhook events</h1><p className="feature-page__muted">Inspect shipment events and their delivery records.</p></div>{shipmentId && <button onClick={() => { setParams({}); setPage(1); }}>Clear shipment filter</button>}</header>
-        <div className="feature-page__toolbar"><input placeholder="Search event ID" aria-label="Search event ID" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /><select value={type} aria-label="Filter event type" onChange={(e) => { setType(e.target.value); setPage(1); }}><option value="">All event types</option>{WEBHOOK_EVENT_VALUES.filter((v) => v.startsWith('shipment.')).map((v) => <option key={v} value={v}>{formatEventType(v)}</option>)}</select></div>
-        {error && <p role="alert" className="feature-page__error">{error}</p>}{loading ? <Loader showLabel label="Loading events" /> : <><div className="feature-page__table"><table><thead><tr><th>Event ID</th><th>Event type</th><th>Shipment</th><th>Status</th><th>Created</th></tr></thead><tbody>{data.items.map((event) => <tr key={event.id}><td><Link to={`/events/${event.id}`}>{event.eventId ?? event.id}</Link></td><td>{formatEventType(event.type)}</td><td>{event.shipment?.trackingNumber ?? event.shipment?._id ?? '—'}</td><td>{event.payload?.status ?? '—'}</td><td>{formatDate(event.createdAt, { withTime: true })}</td></tr>)}</tbody></table></div>{!data.items.length && <p className="feature-page__muted">No events match these filters.</p>}<Pagination pagination={data.pagination} onPageChange={setPage} /></>}
-    </section>;
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = Math.max(1, Number(searchParams.get("page")) || 1);
+    const requestedType = searchParams.get("type") || "";
+    const type = EVENT_FILTERS.includes(requestedType) ? requestedType : "";
+    const search = searchParams.get("search") || "";
+    const [searchInput, setSearchInput] = useState(search);
+    const debouncedSearch = useDebouncedValue(searchInput, 300);
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => setSearchInput(search), [search]);
+
+    useEffect(() => {
+        if (debouncedSearch === search) return;
+        const next = new URLSearchParams(searchParams);
+        if (debouncedSearch.trim()) next.set("search", debouncedSearch.trim());
+        else next.delete("search");
+        next.delete("page");
+        setSearchParams(next, { replace: true });
+    }, [debouncedSearch, search, searchParams, setSearchParams]);
+
+    useEffect(() => {
+        let alive = true;
+        setLoading(true);
+        setError("");
+        getEvents({ page, limit: 20, type, search })
+            .then((data) => alive && setResult(data))
+            .catch((requestError) => alive && setError(requestError.message))
+            .finally(() => alive && setLoading(false));
+        return () => { alive = false; };
+    }, [page, search, type]);
+
+    function updateQuery(key, value) {
+        const next = new URLSearchParams(searchParams);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        if (key !== "page") next.delete("page");
+        setSearchParams(next);
+    }
+
+    return (
+        <section className="feature-page">
+            <header className="feature-page__header">
+                <div>
+                    <h1>Shipment events</h1>
+                    <p className="feature-page__muted">Inspect recorded shipment changes and test events.</p>
+                </div>
+            </header>
+            <div className="feature-page__toolbar">
+                <label>
+                    <span className="sr-only">Search event ID</span>
+                    <input
+                        type="search"
+                        name="search"
+                        autoComplete="off"
+                        maxLength={100}
+                        placeholder="Search event ID…"
+                        value={searchInput}
+                        onChange={(event) => setSearchInput(event.target.value)}
+                    />
+                </label>
+                <label>
+                    <span className="sr-only">Filter by event type</span>
+                    <select value={type} onChange={(event) => updateQuery("type", event.target.value)}>
+                        <option value="">All event types</option>
+                        {EVENT_FILTERS.map((eventType) => (
+                            <option value={eventType} key={eventType}>{formatEventType(eventType)}</option>
+                        ))}
+                    </select>
+                </label>
+            </div>
+            {error && <p className="feature-page__error" role="alert">{error}</p>}
+            {loading ? <Loader label="Loading events" showLabel /> : result?.items.length ? (
+                <>
+                    <div className="feature-page__table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Event ID</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Shipment</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {result.items.map((event) => {
+                                    const shipment = event.shipment;
+                                    const shipmentId = shipment?.id ?? shipment?._id ?? shipment;
+                                    return (
+                                        <tr key={event.id}>
+                                            <td><Link to={`/events/${encodeURIComponent(event.id)}`}>{event.eventId}</Link></td>
+                                            <td>{formatEventType(event.type)}</td>
+                                            <td>{shipment?.trackingNumber ?? shipmentId ?? "—"}</td>
+                                            <td>{event.payload?.status ?? event.data?.status ?? "—"}</td>
+                                            <td>{formatDate(event.createdAt, { withTime: true })}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                    <Pagination pagination={result.pagination} onPageChange={(nextPage) => updateQuery("page", String(nextPage))} />
+                </>
+            ) : (
+                <EmptyState
+                    title={search || type ? "No events match these filters" : "No events yet"}
+                    description="Events are recorded as shipment statuses change or when a test webhook is queued."
+                />
+            )}
+        </section>
+    );
 }

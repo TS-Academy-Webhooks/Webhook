@@ -6,9 +6,13 @@ import { EventSelector } from './EventSelector';
 import { validateWebhook, isValid } from '../../utils/validateWebhook';
 import './WebhookForm.css';
 
-const DEMO_RECEIVER_URL = `${
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
-}/demo-receiver`;
+function getDemoReceiverUrl() {
+    if (import.meta.env.DEV) return 'http://localhost:3000/api/demo-receiver';
+    if (typeof window !== 'undefined') {
+        return new URL('/api/demo-receiver', window.location.origin).href;
+    }
+    return 'https://example.com/api/demo-receiver';
+}
 
 /**
  * @param {{ name: string, url: string, events: string[] }} [initialValues]
@@ -17,22 +21,27 @@ const DEMO_RECEIVER_URL = `${
  * @param {string} [submitLabel]
  */
 export function WebhookForm({
-                                initialValues = { name: '', url: '', description: '', events: [], isActive: true },
+                                initialValues = { name: '', url: '', events: [], isActive: true },
                                 onSubmit,
                                 onCancel,
                                 submitLabel = 'Create Webhook',
                             }) {
     const [name, setName] = useState(initialValues.name);
     const [url, setUrl] = useState(initialValues.url);
-    const [description, setDescription] = useState(initialValues.description ?? '');
     const [events, setEvents] = useState(initialValues.events);
     const [isActive, setIsActive] = useState(initialValues.isActive ?? true);
     const [fieldErrors, setFieldErrors] = useState({});
     const [formError, setFormError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
+    function focusFirstError(errors) {
+        const firstField = Object.keys(errors)[0];
+        const fieldId = firstField === 'events' ? 'webhook-events' : `webhook-${firstField}`;
+        document.getElementById(fieldId)?.focus();
+    }
+
     const handleUseDemoReceiver = () => {
-        setUrl(DEMO_RECEIVER_URL);
+        setUrl(getDemoReceiverUrl());
         setFieldErrors((prev) => ({ ...prev, url: undefined }));
     };
 
@@ -42,6 +51,7 @@ export function WebhookForm({
         const clientErrors = validateWebhook({ name, url, events });
         if (!isValid(clientErrors)) {
             setFieldErrors(clientErrors);
+            focusFirstError(clientErrors);
             return;
         }
 
@@ -49,12 +59,13 @@ export function WebhookForm({
         setFormError(null);
         setSubmitting(true);
         try {
-            await onSubmit({ name: name.trim(), url: url.trim(), description: description.trim(), events, isActive });
+            await onSubmit({ name: name.trim(), url: url.trim(), events, isActive });
         } catch (err) {
             // err is expected to be the normalized shape from utils/apiError.js:
             // { message, fieldErrors }
             if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
                 setFieldErrors(err.fieldErrors);
+                focusFirstError(err.fieldErrors);
             } else {
                 setFormError(err?.message || 'Unable to save webhook. Please try again.');
             }
@@ -72,20 +83,36 @@ export function WebhookForm({
             )}
 
             <Input
+                id="webhook-name"
                 label="Webhook name"
+                name="name"
+                autoComplete="off"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                    setName(e.target.value);
+                    setFieldErrors((current) => ({ ...current, name: undefined }));
+                }}
                 error={fieldErrors.name}
-                placeholder="e.g. Logistics Customer App"
+                minLength={2}
+                maxLength={80}
+                placeholder="e.g., Logistics Customer App…"
             />
 
             <div className="webhook-form__url-field">
                 <Input
+                    id="webhook-url"
                     label="Endpoint URL"
+                    name="url"
+                    type="url"
+                    autoComplete="off"
+                    spellCheck={false}
                     value={url}
-                    onChange={(e) => setUrl(e.target.value)}
+                    onChange={(e) => {
+                        setUrl(e.target.value);
+                        setFieldErrors((current) => ({ ...current, url: undefined }));
+                    }}
                     error={fieldErrors.url}
-                    placeholder="https://example.com/webhooks/receive"
+                    placeholder="https://example.com/webhooks/receive…"
                 />
                 <button
                     type="button"
@@ -94,13 +121,21 @@ export function WebhookForm({
                 >
                     Use Demo Receiver
                 </button>
+                <p className="webhook-form__hint">
+                    Production URLs must use HTTPS. Localhost webhooks require the backend demo receiver and localhost flags to be enabled.
+                </p>
             </div>
 
-            <Input label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What this endpoint is used for" />
+            <EventSelector
+                selected={events}
+                onChange={(next) => {
+                    setEvents(next);
+                    setFieldErrors((current) => ({ ...current, events: undefined }));
+                }}
+                error={fieldErrors.events}
+            />
 
-            <EventSelector selected={events} onChange={setEvents} error={fieldErrors.events} />
-
-            <label className="webhook-form__active"><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Endpoint active</label>
+            <label className="webhook-form__active"><input type="checkbox" name="active" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Endpoint active</label>
 
             <div className="webhook-form__actions">
                 {onCancel && (

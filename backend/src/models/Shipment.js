@@ -23,6 +23,10 @@ const statusHistorySchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    note: {
+      type: String,
+      maxlength: 500,
+    },
   },
   { _id: false }
 );
@@ -43,6 +47,10 @@ const shipmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       index: true,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     origin: {
       type: String,
@@ -69,5 +77,23 @@ const shipmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+shipmentSchema.virtual("timeline").get(function getTimeline() {
+  return (this.statusHistory || []).map(({ status, timestamp, note }) => ({
+    status,
+    at: timestamp,
+    timestamp,
+    ...(note ? { note } : {}),
+  }));
+});
+
+shipmentSchema.set("toJSON", {
+  virtuals: true,
+  transform(_document, result) {
+    result.id = String(result._id);
+    delete result.__v;
+    return result;
+  },
+});
 
 module.exports = mongoose.model("Shipment", shipmentSchema);
