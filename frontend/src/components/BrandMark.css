@@ -1,0 +1,32 @@
+.waybridge-mark {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 0.7rem;
+    color: var(--primary-foreground);
+    background: var(--primary);
+    font-family: var(--font-family);
+    font-weight: 800;
+    letter-spacing: -0.08em;
+    line-height: 1;
+}
+
+.brand-mark--compact {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.65rem;
+    font-size: 1rem;
+}
+
+.brand-mark--default {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.1rem;
+}
+
+.brand-mark--large {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.85rem;
+    font-size: 1.3rem;
+}

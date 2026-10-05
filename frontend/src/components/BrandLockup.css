@@ -1,0 +1,31 @@
+.brand-lockup {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--foreground);
+    text-decoration: none;
+}
+
+.brand-lockup:focus-visible {
+    border-radius: 0.65rem;
+}
+
+.brand-lockup__copy {
+    display: grid;
+    gap: 0.12rem;
+}
+
+.brand-lockup__copy strong {
+    color: inherit;
+    font-size: 0.98rem;
+    font-weight: 750;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+}
+
+.brand-lockup__copy small {
+    color: var(--muted-foreground);
+    font-size: 0.7rem;
+    line-height: 1.2;
+}
